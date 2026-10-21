@@ -163,6 +163,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
     <button class="tab" role="tab" data-view="day" aria-selected="false" type="button" id="tabDay">Aaj</button>
     <button class="tab" role="tab" data-view="ord" aria-selected="false" type="button" id="tabOrd">Orders</button>
+    <button class="tab" role="tab" data-view="net" aria-selected="false" type="button" id="tabNet">Network</button>
   </nav>
 
   <div class="catTabs" id="catTabs" role="tablist" aria-label="Category"></div>
@@ -444,6 +445,8 @@ function copy(text){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Copy ho gaya')},fb)}else fb();
 }
 var MYC={supplier:1,buyer:1,transport:1};
+function isNet(){return document.body.dataset.view==='net'}
+function inScope(l){return isNet()?!!(MYC[l.cat]||l.status==='Won'):!MYC[l.cat]}
 function inCat(l,c){return c==='buyer'?(l.cat==='buyer'||l.status==='Won'):(l.cat||'recycler')===c}
 var PILL={supplier:'Supplier',buyer:'Buyer',transport:'Transporter',inbound:'Enquiry',carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
 var PRE={supplier:'u',buyer:'b',transport:'t',inbound:'e',dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
@@ -483,7 +486,7 @@ function stateOptions(){
   $('fState').innerHTML='<option value="">Sab states</option>'+names.map(function(n){return'<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join('');
   $('stateList').innerHTML=names.map(function(n){return'<option value="'+esc(n)+'">'}).join('');
 }
-function renderStats(){renderStatsFor(leads.filter(function(l){var c=$('fCat').value;return !c||inCat(l,c)}))}
+function renderStats(){renderStatsFor(leads.filter(function(l){var c=$('fCat').value;return inScope(l)&&(!c||inCat(l,c))}))}
 function renderStatsFor(leads){
   var tot=leads.reduce(function(a,l){return a+(Number(l.capacity)||0)},0);
   var contacted=leads.filter(function(l){return l.status&&l.status!=='New'}).length;
@@ -499,6 +502,7 @@ function renderStatsFor(leads){
 function filtered(){
   var q=$('q').value.trim().toLowerCase(),fs=$('fState').value,ft=$('fStatus').value,so=$('fSort').value;
   var r=leads.filter(function(l){
+    if(!inScope(l))return false;
     if(fs&&l.state!==fs)return false;
     var ct=$('fContact').value;
     if(ct==='nophone'&&digits(l.phone).length>=10)return false;
@@ -552,10 +556,13 @@ function finder(l){
 var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','TradeIndia Enquiries'],['supplier','Suppliers'],['buyer','Buyers (deal final)'],['transport','Transporters']];
 var LOAD={transport:'btnTrans',recycler:'btnCpcb',dealer:'btnDealer',carbide:'btnCarbide',stone:'btnStone',caco3:'btnCaco3',actc:'btnActc',agar:'btnAgar',cpow:'btnCpow'};
 function renderCats(){
-  var cur0=$('fCat').value,cnt={'':leads.length};
-  leads.forEach(function(l){var c=l.cat||'recycler';cnt[c]=(cnt[c]||0)+1;if(l.status==='Won'&&c!=='buyer')cnt.buyer=(cnt.buyer||0)+1});
-  $('catTabs').innerHTML='<select id="catSel" aria-label="Category">'+CATS.map(function(c){return'<option value="'+c[0]+'"'+(c[0]===cur0?' selected':'')+'>'+(c[0]===''?'Sab categories':c[1])+' ('+(cnt[c[0]]||0)+')</option>'}).join('')+'</select>';
-  Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=!!cur0&&cur0!==k});
+  var net=isNet(),cur0=$('fCat').value,cnt={'':0};
+  leads.forEach(function(l){if(!inScope(l))return;var c=l.cat||'recycler';cnt['']++;cnt[c]=(cnt[c]||0)+1});
+  if(net)cnt.buyer=leads.filter(function(l){return inCat(l,'buyer')}).length;
+  var list=CATS.filter(function(c){return c[0]===''||(net?!!MYC[c[0]]:!MYC[c[0]])});
+  $('catTabs').innerHTML='<select id="catSel" aria-label="Category">'+list.map(function(c){return'<option value="'+c[0]+'"'+(c[0]===cur0?' selected':'')+'>'+(c[0]===''?(net?'Sab network (suppliers, buyers, transporters)':'Sab categories'):c[1])+' ('+(cnt[c[0]]||0)+')</option>'}).join('')+'</select>';
+  Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=net?!(k==='transport'&&(!cur0||cur0==='transport')):(k==='transport'||(!!cur0&&cur0!==k))});
+  $('btnAdd').textContent=net?'+ Naya contact':'+ Nayi company';
 }
 function render(){renderCats();
   stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();
@@ -585,12 +592,15 @@ function update(id,patch){var l=find(id);if(!l)return;store.save(Object.assign({
 
 /* form */
 function showMy(){$('myFields').hidden=!MYC[$('fCatIn').value]}
+var CATOPTS=[].slice.call($('fCatIn').options).map(function(o){return[o.value,o.textContent]});
+function fillCatIn(net){$('fCatIn').innerHTML=CATOPTS.filter(function(o){return net?!!MYC[o[0]]:!MYC[o[0]]}).map(function(o){return'<option value="'+o[0]+'">'+o[1]+'</option>'}).join('')}
 function openForm(l){
+  var netF=l?!!MYC[l.cat]:isNet();fillCatIn(netF);
   $('importPanel').hidden=true;$('formPanel').hidden=false;
-  $('formTitle').textContent=l?'Company edit':'Nayi company';
+  $('formTitle').textContent=l?'Company edit':(netF?'Naya contact':'Nayi company');
   $('fId').value=l?l.id:'';$('fName').value=l?l.name||'':'';$('fPerson').value=l?l.person||'':'';$('fCity').value=l?l.city||'':'';
   $('fStateIn').value=l?l.state||'':'';$('fCap').value=l&&l.capacity?l.capacity:'';$('fCapNote').value=l?l.capNote||'':'';
-  $('fCatIn').value=(l&&l.cat)||$('fCat').value||'recycler';$('fItem').value=l?l.item||'':'';$('fArea').value=l?l.area||'':'';$('fRate').value=l?l.rate||'':'';showMy();$('fPhone').value=l?l.phone||'':'';$('fEmail').value=l?l.email||'':'';$('fNotes').value=l?l.notes||'':'';
+  $('fCatIn').value=(l&&l.cat)||$('fCat').value||(netF?'supplier':'recycler');$('fItem').value=l?l.item||'':'';$('fArea').value=l?l.area||'':'';$('fRate').value=l?l.rate||'':'';showMy();$('fPhone').value=l?l.phone||'':'';$('fEmail').value=l?l.email||'':'';$('fNotes').value=l?l.notes||'':'';
   $('formPanel').scrollIntoView({behavior:'smooth',block:'start'});$('fName').focus();
 }
 $('fCatIn').addEventListener('change',showMy);
@@ -608,7 +618,7 @@ $('leadForm').onsubmit=function(e){
 
 /* csv */
 function parseLine(s){var out=[],cur='',q=false;for(var i=0;i<s.length;i++){var c=s[i];if(q){if(c==='"'&&s[i+1]==='"'){cur+='"';i++}else if(c==='"')q=false;else cur+=c}else if(c==='"')q=true;else if(c===','){out.push(cur.trim());cur=''}else cur+=c}out.push(cur.trim());return out}
-function importHint(){var c=$('fCat').value;$('importHint').textContent=MYC[c]?'Har line me: naam, city, state, kya dete/lete hain (maal ya gaadi), person, phone, email, route/area, rate. Ye "'+c+'" category me judega (upar dropdown se chuni hui).':'Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho. Jis category ko dropdown me chuna hai, usi me judegi.'}
+function importHint(){var c=$('fCat').value||(isNet()?'supplier':'');$('importHint').textContent=MYC[c]?'Har line me: naam, city, state, kya dete/lete hain (maal ya gaadi), person, phone, email, route/area, rate. Ye "'+c+'" category me judega (upar dropdown se chuni hui).':'Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho. Jis category ko dropdown me chuna hai, usi me judegi.'}
 $('btnImport').onclick=function(){$('formPanel').hidden=true;$('importPanel').hidden=false;importHint();$('csvIn').focus()};
 $('btnImportCancel').onclick=function(){$('importPanel').hidden=true};
 $('btnDoImport').onclick=function(){
@@ -616,7 +626,7 @@ $('btnDoImport').onclick=function(){
   lines.forEach(function(line,i){
     var c=parseLine(line);if(i===0&&/company|naam|name/i.test(c[0])&&/state|city/i.test(c[1]||''))return;
     if(!c[0])return;
-    var cat=$('fCat').value||'recycler';
+    var cat=$('fCat').value||(isNet()?'supplier':'recycler');
     if(MYC[cat]){jobs.push(store.save({id:newId(),cat:cat,name:c[0],city:c[1]||'',state:c[2]||'',item:c[3]||'',person:c[4]||'',phone:c[5]||'',email:c[6]||'',area:c[7]||'',rate:c[8]||'',status:'New',capacity:null,capNote:'',notes:''}));n++;return}
     jobs.push(store.save({id:newId(),cat:cat==='buyer'?'recycler':cat,name:c[0],state:c[1]||'',city:c[2]||'',capacity:Number(String(c[3]||'').replace(/[^\d.]/g,''))||null,person:c[4]||'',phone:c[5]||'',email:c[6]||'',status:'New',capNote:'',notes:''}));n++});
   Promise.all(jobs).then(function(){toast(n+' company jodi gayi');$('csvIn').value='';$('importPanel').hidden=true},function(){toast('Kuch lines save nahi hui')});
@@ -861,7 +871,7 @@ function buildQueue(){
   var r=leads.filter(function(l){
     if(!isOpen(l))return false;
     if(cs&&l.state!==cs)return false;
-    var cc=$('cCat').value;if(cc&&!inCat(l,cc))return false;
+    if(MYC[l.cat])return false;var cc=$('cCat').value;if(cc&&!inCat(l,cc))return false;
     var ph=hasPhone(l);
     if(mode==='nophone')return !ph;
     if(!ph)return false;
@@ -960,6 +970,7 @@ $('viewCall').addEventListener('click',function(e){
 document.querySelector('.tabs').addEventListener('click',function(e){
   var t=e.target.closest('.tab');if(!t)return;
   document.body.dataset.view=t.dataset.view;
+  $('fCat').value='';$('cCat').value='';shown=100;
   document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-selected',b===t?'true':'false')});
   render();
 });
@@ -1084,7 +1095,7 @@ function buildPlan(){
   function push(l,why){if(seen[l.id]||items.length>=target)return;seen[l.id]=1;items.push({l:l,why:why})}
   leads.filter(function(l){return l.cat==='inbound'&&!l.repliedAt&&isOpen(l)}).sort(function(a,b){return (a.enqAt||0)-(b.enqAt||0)}).forEach(function(l){push(l,'TradeIndia enquiry: reply baaki')});
   leads.filter(function(l){return isOpen(l)&&l.nextFollowUp&&l.nextFollowUp<=t&&(l.cat!=='inbound'||l.repliedAt)&&!(l.lastContact===t&&l.nextFollowUp>t)}).sort(function(a,b){return a.nextFollowUp.localeCompare(b.nextFollowUp)}).forEach(function(l){push(l,'Follow-up due ('+l.nextFollowUp+')')});
-  leads.filter(function(l){return isOpen(l)&&hasPhone(l)&&(!l.status||l.status==='New')&&!(l.calls&&l.calls.length)&&!l.lastContact&&l.cat!=='inbound'}).sort(function(a,b){return (b.email?1:0)-(a.email?1:0)||(Number(b.capacity)||0)-(Number(a.capacity)||0)}).forEach(function(l){push(l,'Naya lead, number hai')});
+  leads.filter(function(l){return isOpen(l)&&hasPhone(l)&&(!l.status||l.status==='New')&&!(l.calls&&l.calls.length)&&!l.lastContact&&l.cat!=='inbound'&&!MYC[l.cat]}).sort(function(a,b){return (b.email?1:0)-(a.email?1:0)||(Number(b.capacity)||0)-(Number(a.capacity)||0)}).forEach(function(l){push(l,'Naya lead, number hai')});
   return items;
 }
 function bar(label,n,max,col){return '<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0"><span style="width:110px;flex:none">'+esc(label)+'</span><div style="flex:1;background:var(--bg);height:10px;border-radius:5px"><div style="width:'+(max?Math.max(n?3:0,n/max*100):0)+'%;height:10px;border-radius:5px;background:'+(col||'var(--ember)')+'"></div></div><b style="width:36px;text-align:right">'+n+'</b></div>'}
