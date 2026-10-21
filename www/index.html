@@ -169,7 +169,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <input class="q" id="q" type="search" placeholder="Company, city ya person dhundho" aria-label="Search">
     <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option></select>
     <select id="fState" aria-label="State"><option value="">Sab states</option></select>
-    <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="nophone">Number nahi hai</option><option value="hasphone">Number hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
+    <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="ready">✅ Contact ready (phone ya email)</option><option value="both">Phone + Email dono</option><option value="hasphone">Number hai</option><option value="hasemail">Email hai</option><option value="nophone">Number nahi hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
     <select id="fSort" aria-label="Sort">
       <option value="cap">Capacity: zyada pehle</option>
@@ -371,6 +371,10 @@ function filtered(){
     if(ct==='nophone'&&digits(l.phone).length>=10)return false;
     if(ct==='hasphone'&&digits(l.phone).length<10)return false;
     if(ct==='noemail'&&l.email)return false;
+    var hp=digits(l.phone).length>=10,he=!!l.email;
+    if(ct==='ready'&&!(hp||he))return false;
+    if(ct==='both'&&!(hp&&he))return false;
+    if(ct==='hasemail'&&!he)return false;
     if(ct==='due'&&!(l.nextFollowUp&&l.nextFollowUp<=today()&&l.status!=='Won'&&l.status!=='Lost'))return false;
     var fc=$('fCat').value;if(fc&&(l.cat||'recycler')!==fc)return false;
     if(ft&&(l.status||'New')!==ft)return false;
