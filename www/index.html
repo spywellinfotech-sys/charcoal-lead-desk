@@ -69,7 +69,14 @@ details.panel>summary{cursor:pointer;font:600 20px/1.1 var(--f-display);letter-s
 .tabs{display:flex;border:1px solid var(--line);align-self:flex-start;background:var(--surface)}
 .tab{border:0;background:none;padding:9px 18px;font:600 18px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
-body[data-view="call"] .lv{display:none}
+body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="enq"] .catTabs{display:none}
+.ev{display:none;flex-direction:column;gap:12px}
+body[data-view="enq"] .ev{display:flex}
+.ev textarea{min-height:110px;width:100%}
+.eage{font-size:12px;font-weight:700;color:var(--muted)}
+.eage.late{color:#b91c1c}
+.ereq{font-size:14px;margin:6px 0}
+.ebtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 body:not([data-view="call"]) .cv{display:none}
 .cv{display:flex;flex-direction:column;gap:12px}
 .bar2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -145,6 +152,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
   <nav class="tabs" role="tablist" aria-label="View">
     <button class="tab" role="tab" data-view="leads" aria-selected="true" type="button">Leads</button>
     <button class="tab" role="tab" data-view="call" aria-selected="false" type="button">Telecalling</button>
+    <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
   </nav>
 
   <div class="catTabs" id="catTabs" role="tablist" aria-label="Category"></div>
@@ -157,18 +165,33 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
         <option value="new">Sirf naye, kabhi call nahi hua</option>
         <option value="nophone">Number chahiye</option>
       </select>
-      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option></select>
+      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option></select>
       <select id="cState" aria-label="State"><option value="">Sab states</option></select>
     </div>
     <div id="callCard"></div>
     <div id="callBacks"></div>
   </section>
 
+  <section class="ev" id="viewEnq">
+    <div class="panel">
+      <h2>TradeIndia enquiry jodo</h2>
+      <p class="hint">TradeIndia ka email / SMS / lead text yahan paste karo (ek saath kai bhi chalenge, beech me khali line rakho). Ya TradeIndia lead export ki CSV paste karo. Naam, number, email, city aur requirement apne aap nikal jayegi.</p>
+      <textarea id="enqIn" placeholder="Name: Ramesh Shah&#10;Company: ABC Metals&#10;Mobile: 98xxxxxx10&#10;Email: abc@example.com&#10;City: Ahmedabad&#10;Requirement: Wood charcoal 20 ton"></textarea>
+      <div class="row-actions">
+        <button class="btn primary" id="enqAdd" type="button">Enquiry jodo</button>
+        <button class="btn" id="enqClip" type="button">Clipboard se lao</button>
+      </div>
+    </div>
+    <div id="enqStats" class="stats"></div>
+    <div id="enqNext"></div>
+    <div id="enqList" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
   <section class="stats lv" id="stats" aria-label="Summary"></section>
 
   <section class="bar lv" aria-label="Filters">
     <input class="q" id="q" type="search" placeholder="Company, city ya person dhundho" aria-label="Search">
-    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option></select>
+    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option></select>
     <select id="fState" aria-label="State"><option value="">Sab states</option></select>
     <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="ready">✅ Contact ready (phone ya email)</option><option value="both">Phone + Email dono</option><option value="hasphone">Number hai</option><option value="hasemail">Email hai</option><option value="nophone">Number nahi hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
@@ -239,6 +262,15 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
       <label>Mera number<input id="sPhone" inputmode="tel"></label>
       <label>Email subject<input id="sSubject"></label>
     </div>
+    <div class="grid2">
+      <label>Email<input id="sEmail" type="email"></label>
+      <label>GSTIN<input id="sGstin"></label>
+      <label>Website<input id="sWeb"></label>
+    </div>
+    <label>TradeIndia enquiry: pehla reply (WhatsApp/email)<textarea id="sEmsg" style="min-height:110px"></textarea></label>
+    <label>TradeIndia enquiry: follow-up message<textarea id="sEfu" style="min-height:90px"></textarea></label>
+    <label>TradeIndia enquiry: email subject<input id="sEsubj"></label>
+    <label>TradeIndia enquiry: call script<textarea id="sEscript" style="min-height:110px"></textarea></label>
     <label>Message<textarea id="sMsg" style="min-height:130px"></textarea></label>
     <label>Call script (telecalling)<textarea id="sScript" style="min-height:130px"></textarea></label>
     <label>Activated Carbon message<textarea id="sMactc" style="min-height:90px"></textarea></label>
@@ -282,7 +314,11 @@ var STATUSES=[
 ];
 var ST={};STATUSES.forEach(function(s){ST[s.k]=s});
 var DEFAULTS={
- me:'',brand:'',phone:'',
+ me:'',brand:'Shyla Enterprise',phone:'9720583123',email:'shyla.enterpez@gmail.com',gstin:'09ERTPD7563P1ZN',web:'www.gangastone.com',
+ emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. Hum charcoal ke manufacturer/supplier hain. Aapko kitni quantity chahiye aur delivery kahan karni hai? Rate, spec aur sample turant bhej denge. Mera number: {myphone}',
+ escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne TradeIndia par {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',
+ efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. Rate/sample ke liye kab baat kar sakte hain? Mera number: {myphone}',
+ esubj:'Re: {product} enquiry - {brand}',
  subject:'Charcoal supply for lead smelting - {brand}',
  script:'Namaste, main {me} bol raha hoon {brand} se. Kya meri baat {person} ji se ho rahi hai?\n\nHum lead smelting ke liye charcoal supply karte hain. Aap abhi smelting me coke ya koyla kya use karte ho, aur mahine me kitna lagta hai?\n\nAgar aap chaho to main sample aur rate WhatsApp par bhej deta hoon. Kab dobara baat karein?',
  kscript:'Namaste, main {me} bol raha hoon {brand} se. Kya meri baat {person} ji se ho rahi hai?\n\nHum charcoal supply karte hain. Aapke plant me kya koi process hai jisme charcoal ya carbon ki zaroorat padti hai? Mahine me kitna lagta hai?\n\nMain details aur rate WhatsApp par bhej deta hoon. Kab dobara baat karein?',
@@ -302,6 +338,7 @@ var DEFAULTS={
  msg:'Namaste {person}, main {me} ({brand}) se bol raha hoon., main {me} ({brand}) se bol raha hoon. Hum lead smelting ke liye charcoal supply karte hain, reductant ke roop me. {company} ke liye sample aur rate bhej sakte hain. Kab baat kar sakte hain? Mera number: {myphone}'
 };
 var leads=[],store=null,settings=load('cld-settings',DEFAULTS);
+['brand','phone','email','gstin','web','emsg','escript','efu','esubj'].forEach(function(k){if(!settings[k])settings[k]=DEFAULTS[k]});
 var $=function(id){return document.getElementById(id)};
 
 function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));if(v&&typeof v==='object')return Object.assign({},d,v)}catch(e){}return Object.assign({},d)}
@@ -314,13 +351,14 @@ function copy(text){
   function fb(){var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copy ho gaya')}catch(e){toast('Select karke copy karo')}t.remove()}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Copy ho gaya')},fb)}else fb();
 }
-var PILL={carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
-var PRE={dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
+var PILL={inbound:'Enquiry',carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
+var PRE={inbound:'e',dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
 function tpl(k,l){if(k==='msg'&&l&&l.fuText)return l.fuText;var c=l&&l.cat;var pre=PRE[c]||'';return (pre&&settings[pre+k])||settings[k]||''}
 function fill(t,l){
   var s=settings;
-  return t.replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
+  return t.replace(/\{product\}/g,l.enqReq||'charcoal').replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
 }
+function sig(){var s=settings;return '\n\n--\n'+(s.brand||'')+(s.gstin?'\nGSTIN: '+s.gstin:'')+(s.phone?'\nMobile/WhatsApp: +91 '+s.phone:'')+(s.email?'\nEmail: '+s.email:'')+(s.web?'\nWeb: '+s.web:'')}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function today(){return ymd(new Date())}
 function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return ymd(d)}
@@ -399,7 +437,7 @@ function contactBox(kind,l){
     return'<div class="cbox"><code>WhatsApp +'+esc(d)+'</code><div class="cbox-btns"><a class="btn primary" href="'+url+'" target="_blank" rel="noopener" data-log="'+esc(l.id)+'">WhatsApp</a><button class="btn" type="button" data-copy-msg="'+esc(l.id)+'">Msg copy</button></div></div>';
   }
   if(!l.email)return'<div class="cbox"><span class="none">Email: address nahi hai</span></div>';
-  var subj=encodeURIComponent(fill(settings.subject,l)),body=encodeURIComponent(fill(tpl('msg',l),l));
+  var subj=encodeURIComponent(fill((l.cat==='inbound'?settings.esubj:settings.subject),l)),body=encodeURIComponent(fill(tpl('msg',l),l)+sig());
   var g='https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(l.email)+'&su='+subj+'&body='+body;
   return'<div class="cbox"><code>'+esc(l.email)+'</code><div class="cbox-btns"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener" data-log="'+esc(l.id)+'">Gmail</a><a class="btn" href="mailto:'+esc(l.email)+'?subject='+subj+'&body='+body+'">Mail app</a><button class="btn" type="button" data-copy="'+esc(l.email)+'">Copy</button></div></div>';
 }
@@ -416,7 +454,7 @@ function finder(l){
    '<div class="row-actions"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener">Search on Google</a><a class="btn" href="'+m+'" target="_blank" rel="noopener">Google Maps</a><a class="btn" href="'+li+'" target="_blank" rel="noopener">IndiaMART / JustDial</a></div>'+
    '<div class="finder-in">'+(hp?'':'<input class="qp" inputmode="tel" placeholder="Number mila? yahan daalo" aria-label="Number">')+(he?'':'<input class="qe" type="email" placeholder="Email mila? yahan daalo" aria-label="Email">')+'<button class="btn" type="button" data-qsave="'+esc(l.id)+'">Save</button></div></div>';
 }
-var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder']];
+var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','TradeIndia Enquiries']];
 var LOAD={recycler:'btnCpcb',dealer:'btnDealer',carbide:'btnCarbide',stone:'btnStone',caco3:'btnCaco3',actc:'btnActc',agar:'btnAgar',cpow:'btnCpow'};
 function renderCats(){
   var cur0=$('fCat').value,cnt={'':leads.length};
@@ -425,7 +463,7 @@ function renderCats(){
   Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=!!cur0&&cur0!==k});
 }
 function render(){renderCats();
-  stateOptions();renderStats();renderCall();
+  stateOptions();renderStats();renderCall();renderEnq();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
@@ -510,7 +548,7 @@ $('list').addEventListener('change',function(e){var s=e.target.closest('[data-st
 /* filters + settings */
 STATUSES.forEach(function(s){var o=document.createElement('option');o.value=s.k;o.textContent=s.l;$('fStatus').appendChild(o)});
 ['q','fContact','fCat','fState','fStatus','fSort'].forEach(function(id){$(id).addEventListener('input',function(){shown=100;render()})});
-var map={sMe:'me',sBrand:'brand',sPhone:'phone',sSubject:'subject',sMsg:'msg',sScript:'script',sMactc:'vmsg',sSactc:'vscript',sMagar:'gmsg',sSagar:'gscript',sMcpow:'pmsg',sScpow:'pscript',sKMsg:'kmsg',sKScript:'kscript',sSMsg:'smsg',sSScript:'sscript',sCMsg:'cmsg',sCScript:'cscript',sDMsg:'dmsg',sDScript:'dscript'};
+var map={sEmail:'email',sGstin:'gstin',sWeb:'web',sEmsg:'emsg',sEfu:'efu',sEsubj:'esubj',sEscript:'escript',sMe:'me',sBrand:'brand',sPhone:'phone',sSubject:'subject',sMsg:'msg',sScript:'script',sMactc:'vmsg',sSactc:'vscript',sMagar:'gmsg',sSagar:'gscript',sMcpow:'pmsg',sScpow:'pscript',sKMsg:'kmsg',sKScript:'kscript',sSMsg:'smsg',sSScript:'sscript',sCMsg:'cmsg',sCScript:'cscript',sDMsg:'dmsg',sDScript:'dscript'};
 Object.keys(map).forEach(function(id){
   $(id).value=settings[map[id]]||'';
   $(id).addEventListener('input',function(){settings[map[id]]=$(id).value;persist('cld-settings',settings);render()});
@@ -803,6 +841,97 @@ document.querySelector('.tabs').addEventListener('click',function(e){
   document.body.dataset.view=t.dataset.view;
   document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-selected',b===t?'true':'false')});
   render();
+});
+
+
+/* ---- TradeIndia enquiries ---- */
+function enqLeads(){return leads.filter(function(l){return l.cat==='inbound'})}
+function ago(ms){if(!ms)return '';var m=Math.max(0,Math.round((Date.now()-ms)/60000));if(m<60)return m+' min pehle';var h=Math.round(m/60);if(h<24)return h+' ghante pehle';return Math.round(h/24)+' din pehle'}
+var PH=/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/,EM=/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+function lab(b,keys){var re=new RegExp('(?:^|\\n)\\s*(?:'+keys+')\\s*[:\\-]\\s*([^\\n]+)','i'),m=b.match(re);return m?m[1].trim():''}
+function parseBlock(b){
+  var ph=(b.match(PH)||[''])[0].replace(/[^\d+]/g,'');if(ph.length>10)ph=ph.slice(-10);
+  var ems=(b.match(EM)||[]).filter(function(e){return !/tradeindia|noreply|no-reply/i.test(e)});
+  var person=lab(b,'name|buyer name|buyer|contact person|person|full name');
+  var company=lab(b,'company|company name|organi[sz]ation|firm');
+  var city=lab(b,'city|location'),state=lab(b,'state');
+  var req=lab(b,'requirement|product|looking for|looking to buy|message|enquiry for|inquiry for|description|details|subject');
+  var qty=lab(b,'quantity|qty|order quantity');
+  if(qty&&req.toLowerCase().indexOf(qty.toLowerCase())<0)req=(req?req+' - ':'')+qty;
+  if(!person&&!company){var first=b.split('\n').map(function(x){return x.trim()}).filter(function(x){return x&&x.length<=40&&!/\d{5}|@|:/.test(x)})[0];if(first)person=first}
+  return {phone:ph,email:ems[0]||'',person:person,company:company,city:city,state:state,req:req}
+}
+function parseEnq(txt){
+  txt=String(txt||'').replace(/\r/g,'').trim();if(!txt)return[];
+  var lines=txt.split('\n');
+  if(lines.length>1&&/(name|mobile|phone|email)/i.test(lines[0])&&/[,\t]/.test(lines[0])&&!/:\s/.test(lines[0])){
+    var sep=lines[0].indexOf('\t')>=0?'\t':',',h=lines[0].split(sep).map(function(x){return x.trim().toLowerCase()});
+    function ix(re){for(var i=0;i<h.length;i++)if(re.test(h[i]))return i;return -1}
+    var iN=ix(/^(name|buyer|person|contact)/),iC=ix(/company|firm|organi/),iP=ix(/mobile|phone|contact no|number/),iE=ix(/mail/),iCt=ix(/city|location/),iS=ix(/state/),iR=ix(/requirement|product|message|enquiry|inquiry|details|subject/),iQ=ix(/qty|quantity/);
+    return lines.slice(1).map(function(ln){var c=ln.split(sep).map(function(x){return x.trim().replace(/^"|"$/g,'')});function g(i){return i>=0?c[i]||'':''}
+      var ph=g(iP).replace(/[^\d]/g,'').slice(-10);return{phone:ph,email:g(iE),person:g(iN),company:g(iC),city:g(iCt),state:g(iS),req:[g(iR),g(iQ)].filter(Boolean).join(' - ')}}).filter(function(r){return r.phone||r.email});
+  }
+  var blocks=txt.split(/\n\s*\n+/);
+  if(blocks.length===1){var parts=txt.split(/\n(?=\s*(?:enquiry|inquiry|buyer|lead)\b[^\n]*\n)/i);if(parts.length>1)blocks=parts}
+  return blocks.map(parseBlock).filter(function(r){return r.phone||r.email});
+}
+function addEnquiries(txt){
+  var rows=parseEnq(txt);if(!rows.length){toast('Number ya email nahi mila. Text check karo');return 0}
+  var added=0,merged=0,inb=enqLeads();
+  rows.forEach(function(r){
+    var ex=inb.find(function(l){return (r.phone&&digits(l.phone).slice(-10)===r.phone.slice(-10))||(r.email&&l.email&&l.email.toLowerCase()===r.email.toLowerCase())});
+    if(ex){var note=(ex.notes?ex.notes+'\n':'')+today()+': Dobara enquiry'+(r.req?' - '+r.req:'');store.save(Object.assign({},ex,{enqAt:Date.now(),notes:note,enqReq:r.req||ex.enqReq,repliedAt:0,status:(ex.status==='Won'||ex.status==='Lost')?ex.status:'New',nextFollowUp:today()}));merged++;return}
+    var l={id:newId(),cat:'inbound',name:r.company||r.person||('Enquiry '+(r.phone||r.email)),person:r.company?r.person:'',city:r.city,state:r.state,capacity:'',phone:r.phone?'+91 '+r.phone.slice(-10):'',email:r.email,
+      notes:'TradeIndia enquiry'+(r.req?': '+r.req:''),enqReq:r.req||'charcoal',enqAt:Date.now(),src:'TradeIndia',status:'New',nextFollowUp:today(),calls:[]};
+    store.save(l);inb.push(l);added++});
+  toast(added+' nayi enquiry'+(merged?', '+merged+' dobara aayi':''));return added+merged;
+}
+function enqDone(id,kind){
+  var l=find(id);if(!l)return;
+  var now=Date.now(),step=(l.fuStep||0),patch={lastCall:now,lastContact:today(),calls:(l.calls||[]).concat([{t:now,o:kind}]).slice(-15)};
+  if(kind==='reply'){patch.repliedAt=now;patch.status=(!l.status||l.status==='New')?'Contacted':l.status;patch.fuStep=1;patch.nextFollowUp=addDays(1)}
+  else{var gaps=[1,3,7,14];patch.fuStep=step+1;patch.nextFollowUp=step<gaps.length?addDays(gaps[Math.min(step,gaps.length-1)]):'';if(patch.fuStep>=gaps.length+1)patch.nextFollowUp=''}
+  update(id,patch);
+}
+function enqLinks(l){
+  var d=digits(l.phone),first=!l.repliedAt,txt=fill(first?settings.emsg:settings.efu,l);
+  return {wa:d?'https://wa.me/'+d+'?text='+encodeURIComponent(txt):'',
+    mail:l.email?'mailto:'+l.email+'?subject='+encodeURIComponent(fill(settings.esubj,l))+'&body='+encodeURIComponent(txt+sig()):'',
+    tel:d?'tel:+'+d:''};
+}
+function renderEnq(){
+  var all=enqLeads(),t=today();
+  var fresh=all.filter(function(l){return !l.repliedAt&&isOpen(l)});
+  var due=all.filter(function(l){return l.repliedAt&&isOpen(l)&&l.nextFollowUp&&l.nextFollowUp<=t});
+  var tab=$('tabEnq');if(tab)tab.textContent='Enquiries'+(fresh.length+due.length?' ('+(fresh.length+due.length)+')':'');
+  if(document.body.dataset.view!=='enq')return;
+  $('enqStats').innerHTML='<div class="stat"><b>'+fresh.length+'</b><span>Reply baaki</span></div><div class="stat"><b>'+due.length+'</b><span>Follow-up due</span></div><div class="stat"><b>'+all.length+'</b><span>Total enquiry</span></div><div class="stat"><b>'+all.filter(function(l){return l.status==='Won'}).length+'</b><span>Order mile</span></div>';
+  var queue=fresh.concat(due).filter(function(l){return (l.phone||l.email)&&!enqSkip[l.id]});
+  var n=queue[0];
+  if(n){var k=enqLinks(n),isF=!!n.repliedAt;
+    $('enqNext').innerHTML='<div class="panel"><h2>Agla: '+esc(n.name)+'</h2><p class="hint">'+(isF?'Follow-up':'Pehla reply')+' · '+queue.length+' baaki. Button dabao, message khulega, bhej do, wapas aao. Agli enquiry apne aap aa jayegi.</p><div class="ebtns">'+
+     (k.wa?'<a class="btn primary" target="_blank" rel="noopener" href="'+k.wa+'" data-edone="'+esc(n.id)+'" data-ek="'+(isF?'fu':'reply')+'">WhatsApp bhejo</a>':'')+
+     (k.mail?'<a class="btn" href="'+k.mail+'" data-edone="'+esc(n.id)+'" data-ek="'+(isF?'fu':'reply')+'">Email bhejo</a>':'')+
+     '<button class="btn" type="button" data-eskip="'+esc(n.id)+'">Baad me</button></div></div>';
+  }else $('enqNext').innerHTML=all.length?'<div class="empty">Sab enquiry ka reply ho chuka hai. Naya enquiry aate hi yahan paste karo.</div>':'<div class="empty">Abhi koi enquiry nahi. TradeIndia ka lead text upar paste karo.</div>';
+  var rows=all.slice().sort(function(a,b){var ua=(!a.repliedAt)?1:0,ub=(!b.repliedAt)?1:0;return ub-ua||(b.enqAt||0)-(a.enqAt||0)});
+  $('enqList').innerHTML=rows.slice(0,60).map(function(l){
+    var k=enqLinks(l),st=ST[l.status||'New']||ST.New,late=!l.repliedAt&&(Date.now()-(l.enqAt||0))>30*60000,isF=!!l.repliedAt,dueF=isF&&l.nextFollowUp&&l.nextFollowUp<=t;
+    return'<article class="lead" style="--st:var('+st.c+')"><div class="lead-head"><div><div class="name">'+esc(l.name)+'</div><div class="meta">'+esc([l.person,l.city,l.state].filter(Boolean).join(' · '))+'</div></div><span class="pill" style="--pill-bg:var('+st.bg+');--pill-fg:var('+st.fg+')">'+st.l+'</span></div>'+
+     '<div class="eage'+(late?' late':'')+'">'+(l.repliedAt?'Reply: '+ago(l.repliedAt):'Aaya: '+ago(l.enqAt)+(late?' · jaldi reply karo':''))+(l.nextFollowUp&&isF&&isOpen(l)?' · follow-up '+esc(l.nextFollowUp)+(dueF?' (due)':''):'')+'</div>'+
+     '<div class="ereq">'+esc(l.enqReq||'')+'</div>'+
+     '<div class="ebtns">'+(k.wa?'<a class="btn'+(!isF||dueF?' primary':'')+'" target="_blank" rel="noopener" href="'+k.wa+'" data-edone="'+esc(l.id)+'" data-ek="'+(isF?'fu':'reply')+'">WhatsApp</a>':'')+(k.mail?'<a class="btn" href="'+k.mail+'" data-edone="'+esc(l.id)+'" data-ek="'+(isF?'fu':'reply')+'">Email</a>':'')+(k.tel?'<a class="btn" href="'+k.tel+'" data-edone="'+esc(l.id)+'" data-ek="'+(isF?'fu':'reply')+'">Call</a>':'')+'</div></article>'}).join('');
+}
+var enqSkip={};
+$('enqAdd').addEventListener('click',function(){var n=addEnquiries($('enqIn').value);if(n)$('enqIn').value=''});
+$('enqClip').addEventListener('click',function(){
+  if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(function(t){$('enqIn').value=t;var n=addEnquiries(t);if(n)$('enqIn').value=''},function(){toast('Clipboard allow nahi hua. Text paste karke "Enquiry jodo" dabao')})}
+  else toast('Is phone me clipboard nahi khula. Text paste karo');
+});
+$('viewEnq').addEventListener('click',function(e){
+  var a=e.target.closest('[data-edone],[data-eskip]');if(!a)return;
+  if(a.dataset.edone){var id=a.dataset.edone,k=a.dataset.ek;setTimeout(function(){enqDone(id,k)},300)}
+  else if(a.dataset.eskip){var l=find(a.dataset.eskip);enqSkip[a.dataset.eskip]=1;renderEnq()}
 });
 
 /* start */
