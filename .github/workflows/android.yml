@@ -35,6 +35,7 @@ jobs:
         run: |
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
+          sed -i "s/__VER__/1.0.${{ github.run_number }}/" www/index.html
       - name: Copy web app into Android
         run: npx cap sync android
       - name: Use fixed signing key (so updates install over old app)
