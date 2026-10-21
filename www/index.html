@@ -121,6 +121,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
 .link{color:var(--ember)}
 
 .finder{border:1px dashed #9CC4F0;background:var(--ember-soft);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.fuRow{display:flex;flex-direction:column;gap:6px}.fu-in{display:flex;flex-direction:column;gap:8px}.fu-in textarea{min-height:64px}.fu-in input{max-width:220px}
 .finder-in{display:flex;gap:8px;flex-wrap:wrap}
 .finder-in input{flex:1;min-width:150px}
 .bar{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.bar .q{grid-column:1/-1}
@@ -273,7 +274,7 @@ function copy(text){
   function fb(){var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copy ho gaya')}catch(e){toast('Select karke copy karo')}t.remove()}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Copy ho gaya')},fb)}else fb();
 }
-function tpl(k,l){var c=l&&l.cat;var pre=c==='dealer'?'d':c==='carbide'?'c':'';return (pre&&settings[pre+k])||settings[k]||''}
+function tpl(k,l){if(k==='msg'&&l&&l.fuText)return l.fuText;var c=l&&l.cat;var pre=c==='dealer'?'d':c==='carbide'?'c':'';return (pre&&settings[pre+k])||settings[k]||''}
 function fill(t,l){
   var s=settings;
   return t.replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
@@ -355,6 +356,9 @@ function contactBox(kind,l){
   var g='https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(l.email)+'&su='+subj+'&body='+body;
   return'<div class="cbox"><code>'+esc(l.email)+'</code><div class="cbox-btns"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener" data-log="'+esc(l.id)+'">Gmail</a><a class="btn" href="mailto:'+esc(l.email)+'?subject='+subj+'&body='+body+'">Mail app</a><button class="btn" type="button" data-copy="'+esc(l.email)+'">Copy</button></div></div>';
 }
+function fuRow(l){
+  if(l.status==='Won'||l.status==='Lost')return'';
+  return'<div class="fuRow"><div class="sec">Follow-up</div><div class="fu-in"><input type="date" class="fud" value="'+esc(l.nextFollowUp||'')+'" aria-label="Follow-up date"><textarea class="fut" placeholder="Follow-up ka apna text likho (WhatsApp / email me yahi jayega)" aria-label="Follow-up text">'+esc(l.fuText||'')+'</textarea><button class="btn" type="button" data-fusave="'+esc(l.id)+'">Follow-up save</button></div>'+(l.fuText?'<div class="hint">WhatsApp aur email me ab ye text jayega.</div>':'')+'</div>'}
 function finder(l){
   var hp=digits(l.phone).length>=10,he=!!l.email;if(hp&&he)return'';
   var place=[l.name,l.city,l.state].filter(Boolean).join(' ');
@@ -378,7 +382,7 @@ function render(){
      '<span class="pill" style="--pill-bg:var('+st.bg+');--pill-fg:var('+st.fg+')">'+st.l+'</span></div>'+
      '<div class="cap"><div class="cap-line"><span>'+(cap?fmt(cap)+' t/yr':'Capacity pata nahi')+'</span><span>'+(cap?'~'+fmt(Math.round(cap/12))+' t/mahina':'')+'</span></div>'+
      '<div class="track"><div class="fill" style="width:'+(cap?Math.max(2,cap/max*100):0)+'%"></div></div>'+(l.capNote?'<div class="note">Source: '+esc(l.capNote)+'</div>':'')+'</div>'+
-     '<div class="contact">'+contactBox('call',l)+contactBox('wa',l)+contactBox('mail',l)+'</div>'+finder(l)+
+     '<div class="contact">'+contactBox('call',l)+contactBox('wa',l)+contactBox('mail',l)+'</div>'+finder(l)+fuRow(l)+
      (l.notes?'<div class="note">'+esc(l.notes)+'</div>':'')+
      '<div class="lead-foot"><select data-status="'+esc(l.id)+'" aria-label="Status">'+opts+'</select>'+
      '<button class="btn" type="button" data-logbtn="'+esc(l.id)+'">Aaj contact kiya</button>'+
@@ -431,9 +435,11 @@ $('btnExport').onclick=function(){
 
 /* list actions */
 $('list').addEventListener('click',function(e){
-  var t=e.target.closest('[data-copy],[data-copy-msg],[data-edit],[data-del],[data-logbtn],[data-log],[data-more],[data-qsave]');if(!t)return;if(t.dataset.more){shown+=100;render();return}
+  var t=e.target.closest('[data-copy],[data-copy-msg],[data-edit],[data-del],[data-logbtn],[data-log],[data-more],[data-qsave],[data-fusave]');if(!t)return;if(t.dataset.more){shown+=100;render();return}
   if(t.dataset.copy){copy(t.dataset.copy)}
   else if(t.dataset.copyMsg){var l=find(t.dataset.copyMsg);if(l)copy(fill(tpl('msg',l),l))}
+  else if(t.dataset.fusave){var c2=t.closest('.lead'),dd=c2.querySelector('.fud').value,tx=c2.querySelector('.fut').value.trim(),l4=find(t.dataset.fusave);
+    if(!l4)return;update(l4.id,{nextFollowUp:dd,fuText:tx,status:(!l4.status||l4.status==='New')?'Contacted':l4.status});toast('Follow-up save ho gaya')}
   else if(t.dataset.qsave){var card=t.closest('.lead'),qp=card.querySelector('.qp'),qe=card.querySelector('.qe'),patch={};
     if(qp&&qp.value.trim()){if(digits(qp.value).length<10){toast('Sahi number daalo');return}patch.phone=qp.value.trim()}
     if(qe&&qe.value.trim()){if(!/^\S+@\S+\.\S+$/.test(qe.value.trim())){toast('Sahi email daalo');return}patch.email=qe.value.trim()}
@@ -549,7 +555,7 @@ function buildQueue(){
 function val(id){var e=$(id);return e?e.value:''}
 function renderCall(){
   if(document.body.dataset.view!=='call')return;
-  var keep={id:cur,note:val('callNote'),date:val('callDate'),phone:val('callPhone')};
+  var keep={id:cur,note:val('callNote'),date:val('callDate'),phone:val('callPhone'),msg:val('callMsg'),fu:val('callFu'),msgBase:$('callMsg')?$('callMsg').defaultValue:''};
   var cs=$('cState'),sel=cs.value,names={};leads.forEach(function(l){if(l.state)names[l.state]=1});
   cs.innerHTML='<option value="">Sab states</option>'+Object.keys(names).sort().map(function(n){return'<option'+(n===sel?' selected':'')+'>'+esc(n)+'</option>'}).join('');
   var q=buildQueue(),t=today(),mode=$('cMode').value;
@@ -573,7 +579,7 @@ function renderCall(){
     if(d){
       var wa='https://wa.me/'+d+'?text='+encodeURIComponent(fill(tpl('msg',lead),lead));
       html+='<div class="call-phone">+'+esc(d)+'</div>'+
-        '<div class="row-actions"><a class="btn primary" href="tel:+'+d+'">Call karo</a><button class="btn" type="button" data-copy="+'+d+'">Copy</button><a class="btn" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="'+gs+'" target="_blank" rel="noopener">Google</a></div>';
+        '<div class="row-actions"><a class="btn primary" href="tel:+'+d+'">Call karo</a><button class="btn" type="button" data-copy="+'+d+'">Copy</button><a class="btn" id="callWa" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a><a class="btn" href="'+gs+'" target="_blank" rel="noopener">Google</a></div>';
     }else{
       html+='<div class="note">Is company ka number nahi hai. Google par dhoondho, phir yahan daalo.</div>'+
         '<div class="row-actions"><a class="btn" href="'+gs+'" target="_blank" rel="noopener">Google par number dhoondho</a><a class="btn" href="https://www.google.com/maps/search/'+encodeURIComponent(lead.name+' '+(lead.city||'')+' '+(lead.state||''))+'" target="_blank" rel="noopener">Google Maps par dekho</a></div>'+
@@ -585,19 +591,23 @@ function renderCall(){
       if(lead.notes)html+='<div class="note">Notes: '+esc(lead.notes)+'</div>';
       var cl=(lead.calls||[]).slice(-3).reverse();
       if(cl.length)html+='<div class="clog"><span class="sec">Pichhle calls</span>'+cl.map(function(c){return'<span>'+esc(dayOf(c.t))+' · '+esc(OUT[c.o]||c.o)+(c.n?' · '+esc(c.n):'')+'</span>'}).join('')+'</div>';
-      html+='<label>Call ka note<input id="callNote" placeholder="Kitna chahiye, kaun sa fuel, kisse baat hui"></label>'+
+      html+='<label>Message (yahin badal sakte ho, WhatsApp isi se jayega)<textarea id="callMsg" style="min-height:110px">'+esc(fill(tpl('msg',lead),lead))+'</textarea></label>'+
+        '<label>Follow-up text (agli baar ke liye apna message likho, WhatsApp me yahi jayega)<textarea id="callFu" style="min-height:80px" placeholder="jaise: Sir, pichhli baar sample ki baat hui thi. Rate ke saath dobara bhej raha hoon">'+esc(lead.fuText||'')+'</textarea></label>'+
+        '<label>Call ka note<input id="callNote" placeholder="Kitna chahiye, kaun sa fuel, kisse baat hui"></label>'+
         '<label>Follow-up date (khali chhodo to apne aap)<input id="callDate" type="date"></label>'+
         '<div class="outs">'+Object.keys(OUT).map(function(k){return'<button class="btn'+(k==='interested'||k==='sample'?' primary':'')+'" type="button" data-out="'+k+'">'+OUT[k]+'</button>'}).join('')+'</div>';
     }
     html+='<div class="row-actions"><button class="btn" type="button" data-skip="1">Skip</button></div></div>';
   }
   $('callCard').innerHTML=html;
-  if(keep.id===cur){['callNote','callDate','callPhone'].forEach(function(id,i){var v=[keep.note,keep.date,keep.phone][i],e=$(id);if(e&&v)e.value=v})}
+  if(keep.id===cur){['callNote','callDate','callPhone'].forEach(function(id,i){var v=[keep.note,keep.date,keep.phone][i],e=$(id);if(e&&v)e.value=v});var mm=$('callMsg');if(mm&&keep.msg&&keep.msg!==keep.msgBase)mm.value=keep.msg;var ff=$('callFu');if(ff&&keep.fu)ff.value=keep.fu;if(mm)syncWa()}
   var up=leads.filter(function(l){return isOpen(l)&&l.nextFollowUp}).sort(function(a,b){return a.nextFollowUp.localeCompare(b.nextFollowUp)}).slice(0,8);
   $('callBacks').innerHTML=up.length?'<h2 style="margin-bottom:8px">Follow-ups</h2><div style="display:flex;flex-direction:column;gap:6px">'+up.map(function(l){
     var od=l.nextFollowUp<=t;
     return'<div class="cbrow"><span><b>'+esc(l.name)+'</b> <span class="'+(od?'due':'meta')+'">'+esc(l.nextFollowUp)+(od?' · due':'')+'</span></span>'+(hasPhone(l)?'<button class="btn" type="button" data-pick="'+esc(l.id)+'">Abhi call</button>':'<span class="meta">number nahi</span>')+'</div>'}).join('')+'</div>':'';
 }
+function syncWa(){var a=$('callWa'),m=$('callMsg'),l=find(cur);if(!a||!m||!l)return;a.href='https://wa.me/'+digits(l.phone)+'?text='+encodeURIComponent(m.value)}
+document.addEventListener('input',function(e){if(e.target&&e.target.id==='callMsg')syncWa()});
 function logOutcome(o){
   var l=find(cur);if(!l)return;
   var note=val('callNote').trim(),pick=val('callDate'),now=Date.now();
@@ -611,6 +621,7 @@ function logOutcome(o){
   else if(o==='notinterested'){patch.status='Lost';patch.nextFollowUp=''}
   else if(o==='wrong'){patch.phone='';patch.nextFollowUp=''}
   if(note&&o!=='notinterested'&&o!=='wrong'){patch.notes=(l.notes?l.notes+'\n':'')+dayOf(now)+': '+note}
+  var fu=val('callFu').trim();if(fu!==(l.fuText||''))patch.fuText=fu;
   delete skipped[l.id];cur=null;
   update(l.id,patch);toast('Call log ho gaya');
 }
