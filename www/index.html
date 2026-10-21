@@ -315,7 +315,7 @@ Rate sirf validity tak mananiye.</textarea></label>
 
   <section class="panel lv" id="importPanel" hidden>
     <h2>CSV import</h2>
-    <p class="hint">Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho.</p>
+    <p class="hint" id="importHint">Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho.</p>
     <textarea id="csvIn" placeholder="Company Ltd, Gujarat, Mundra, 50000, Ramesh Shah, 9800000000, info@example.com"></textarea>
     <div class="row-actions">
       <button class="btn primary" id="btnDoImport" type="button">Import karo</button>
@@ -608,14 +608,17 @@ $('leadForm').onsubmit=function(e){
 
 /* csv */
 function parseLine(s){var out=[],cur='',q=false;for(var i=0;i<s.length;i++){var c=s[i];if(q){if(c==='"'&&s[i+1]==='"'){cur+='"';i++}else if(c==='"')q=false;else cur+=c}else if(c==='"')q=true;else if(c===','){out.push(cur.trim());cur=''}else cur+=c}out.push(cur.trim());return out}
-$('btnImport').onclick=function(){$('formPanel').hidden=true;$('importPanel').hidden=false;$('csvIn').focus()};
+function importHint(){var c=$('fCat').value;$('importHint').textContent=MYC[c]?'Har line me: naam, city, state, kya dete/lete hain (maal ya gaadi), person, phone, email, route/area, rate. Ye "'+c+'" category me judega (upar dropdown se chuni hui).':'Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho. Jis category ko dropdown me chuna hai, usi me judegi.'}
+$('btnImport').onclick=function(){$('formPanel').hidden=true;$('importPanel').hidden=false;importHint();$('csvIn').focus()};
 $('btnImportCancel').onclick=function(){$('importPanel').hidden=true};
 $('btnDoImport').onclick=function(){
   var lines=$('csvIn').value.split(/\r?\n/).filter(function(x){return x.trim()}),n=0,jobs=[];
   lines.forEach(function(line,i){
-    var c=parseLine(line);if(i===0&&/company|naam|name/i.test(c[0])&&/state/i.test(c[1]||''))return;
+    var c=parseLine(line);if(i===0&&/company|naam|name/i.test(c[0])&&/state|city/i.test(c[1]||''))return;
     if(!c[0])return;
-    jobs.push(store.save({id:newId(),name:c[0],state:c[1]||'',city:c[2]||'',capacity:Number(String(c[3]||'').replace(/[^\d.]/g,''))||null,person:c[4]||'',phone:c[5]||'',email:c[6]||'',status:'New',capNote:'',notes:''}));n++});
+    var cat=$('fCat').value||'recycler';
+    if(MYC[cat]){jobs.push(store.save({id:newId(),cat:cat,name:c[0],city:c[1]||'',state:c[2]||'',item:c[3]||'',person:c[4]||'',phone:c[5]||'',email:c[6]||'',area:c[7]||'',rate:c[8]||'',status:'New',capacity:null,capNote:'',notes:''}));n++;return}
+    jobs.push(store.save({id:newId(),cat:cat==='buyer'?'recycler':cat,name:c[0],state:c[1]||'',city:c[2]||'',capacity:Number(String(c[3]||'').replace(/[^\d.]/g,''))||null,person:c[4]||'',phone:c[5]||'',email:c[6]||'',status:'New',capNote:'',notes:''}));n++});
   Promise.all(jobs).then(function(){toast(n+' company jodi gayi');$('csvIn').value='';$('importPanel').hidden=true},function(){toast('Kuch lines save nahi hui')});
 };
 $('btnExport').onclick=function(){
