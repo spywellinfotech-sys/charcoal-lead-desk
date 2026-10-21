@@ -1,6 +1,6 @@
 /**
  * Shyla Enterprise - TradeIndia enquiry auto-reply (Google Apps Script)
- * Chalta hai aapke Gmail (shyla.enterpez@gmail.com) me, free hai, alag server nahi chahiye.
+ * Chalta hai aapke Gmail (shyla.enterprz@gmail.com) me, free hai, alag server nahi chahiye.
  *
  * Kya karta hai (har 1 minute):
  *  1. TradeIndia ke naye enquiry emails padhta hai
@@ -12,7 +12,7 @@
 var CFG = {
   BRAND: 'Shyla Enterprise',
   PHONE: '9720583123',
-  EMAIL: 'shyla.enterpez@gmail.com',
+  EMAIL: 'shyla.enterprz@gmail.com',
   GSTIN: '09ERTPD7563P1ZN',
   WEB: 'www.gangastone.com',
   // Gmail search: TradeIndia ke emails. Zarurat ho to badlo.

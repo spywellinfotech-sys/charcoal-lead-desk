@@ -401,7 +401,7 @@ var STATUSES=[
 ];
 var ST={};STATUSES.forEach(function(s){ST[s.k]=s});
 var DEFAULTS={
- me:'',brand:'Shyla Enterprise',phone:'9720583123',email:'shyla.enterpez@gmail.com',gstin:'09ERTPD7563P1ZN',web:'www.gangastone.com',
+ me:'',brand:'Shyla Enterprise',phone:'9720583123',email:'shyla.enterprz@gmail.com',gstin:'09ERTPD7563P1ZN',web:'www.gangastone.com',
  umsg:'Namaste {person}, main {me} ({brand}) se bol raha hoon. Humein {item} chahiye. Aapka latest rate, minimum quantity aur delivery time bataiye. Mera number: {myphone}',
  uscript:'Namaste, main {me} bol raha hoon {brand} se. Kya meri baat {person} ji se ho rahi hai?\n\nHumein {item} chahiye. Aaj ka rate kya hai, minimum quantity aur delivery kitne din me hogi? Payment terms kya rahenge?',
  bmsg:'Namaste {person}, {brand} se. Pichhle order ke liye dhanyavaad. Agle order ki requirement ho to bata dijiye, fresh rate aur stock ready hai. Mera number: {myphone}',
@@ -432,6 +432,7 @@ var DEFAULTS={
 };
 var leads=[],store=null,settings=load('cld-settings',DEFAULTS);
 ['brand','phone','email','gstin','web','emsg','escript','efu','esubj'].forEach(function(k){if(!settings[k])settings[k]=DEFAULTS[k]});
+if(settings.email==='shyla.enterpez@gmail.com'){settings.email=DEFAULTS.email;persist('cld-settings',settings)}
 var $=function(id){return document.getElementById(id)};
 
 function load(k,d){try{var v=JSON.parse(localStorage.getItem(k));if(v&&typeof v==='object')return Object.assign({},d,v)}catch(e){}return Object.assign({},d)}
