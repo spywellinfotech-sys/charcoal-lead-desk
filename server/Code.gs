@@ -1,5 +1,5 @@
 /**
- * Shyla Enterprise - TradeIndia enquiry auto-reply (Google Apps Script)
+ * Shyla Enterprise - TradeIndia + IndiaMART enquiry auto-reply (Google Apps Script)
  * Chalta hai aapke Gmail (shyla.enterprz@gmail.com) me, free hai, alag server nahi chahiye.
  *
  * Kya karta hai (har 1 minute):
@@ -16,7 +16,8 @@ var CFG = {
   GSTIN: '09ERTPD7563P1ZN',
   WEB: 'www.gangastone.com',
   // Gmail search: TradeIndia ke emails. Zarurat ho to badlo.
-  QUERY: 'from:tradeindia.com is:unread newer_than:2d',
+  // TradeIndia + IndiaMART ke enquiry emails. Sender alag dikhe to yahan badlo.
+  QUERY: '(from:tradeindia.com OR from:indiamart.com OR from:indiamart.in) is:unread newer_than:2d',
   LABEL: 'shyla-done',
   AUTO_EMAIL: true,
   // WhatsApp Cloud API (optional). Meta Business me approved template chahiye.
@@ -35,7 +36,7 @@ function sheet_() {
   else {
     ss = SpreadsheetApp.create('Shyla Enquiries');
     props.setProperty('SHEET_ID', ss.getId());
-    ss.getSheets()[0].appendRow(['id', 'at', 'person', 'company', 'phone', 'email', 'city', 'state', 'req', 'replied']);
+    ss.getSheets()[0].appendRow(['id', 'at', 'person', 'company', 'phone', 'email', 'city', 'state', 'req', 'replied', 'src']);
   }
   return ss.getSheets()[0];
 }
@@ -49,7 +50,7 @@ function parse_(body) {
   var b = String(body).replace(/\r/g, '');
   var ph = (b.match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/) || [''])[0].replace(/[^\d]/g, '');
   if (ph.length > 10) ph = ph.slice(-10);
-  var ems = (b.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) || []).filter(function (e) { return !/tradeindia|noreply|no-reply|shyla/i.test(e); });
+  var ems = (b.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) || []).filter(function (e) { return !/tradeindia|indiamart|noreply|no-reply|shyla|turbancorpn/i.test(e); });
   var req = lab_(b, 'requirement|product|looking for|message|enquiry for|inquiry for|description|details|subject');
   var qty = lab_(b, 'quantity|qty|order quantity');
   if (qty && req.toLowerCase().indexOf(qty.toLowerCase()) < 0) req = (req ? req + ' - ' : '') + qty;
@@ -95,7 +96,8 @@ function processEnquiries() {
       var replied = false;
       try { if (CFG.AUTO_EMAIL && r.email) { GmailApp.sendEmail(r.email, 'Re: ' + (r.req || 'Enquiry') + ' - ' + CFG.BRAND, replyText_(r), { name: CFG.BRAND }); replied = true; } } catch (e) {}
       try { if (sendWa_(r)) replied = true; } catch (e) {}
-      sh.appendRow([m.getId(), new Date().getTime(), r.person, r.company, r.phone, r.email, r.city, r.state, r.req, replied ? 'yes' : '']);
+      var src = /indiamart/i.test(m.getFrom()) ? 'IndiaMART' : 'TradeIndia';
+      sh.appendRow([m.getId(), new Date().getTime(), r.person, r.company, r.phone, r.email, r.city, r.state, r.req, replied ? 'yes' : '', src]);
     });
     th.addLabel(label); th.markRead();
   });
@@ -106,7 +108,7 @@ function doGet(e) {
   if (!e || !e.parameter || e.parameter.key !== CFG.SECRET) return ContentService.createTextOutput('[]').setMimeType(ContentService.MimeType.JSON);
   var since = Number(e.parameter.since) || 0, out = [];
   sheet_().getDataRange().getValues().slice(1).forEach(function (x) {
-    if (Number(x[1]) > since) out.push({ id: x[0], at: Number(x[1]), person: x[2], company: x[3], phone: x[4], email: x[5], city: x[6], state: x[7], req: x[8], replied: x[9] === 'yes' });
+    if (Number(x[1]) > since) out.push({ id: x[0], at: Number(x[1]), person: x[2], company: x[3], phone: x[4], email: x[5], city: x[6], state: x[7], req: x[8], replied: x[9] === 'yes', src: x[10] || '' });
   });
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }

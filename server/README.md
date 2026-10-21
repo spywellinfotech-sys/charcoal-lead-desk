@@ -1,5 +1,10 @@
 # Shyla auto-reply setup (10 minute ka kaam)
 
+**IndiaMART/TradeIndia ke enquiry email kis Gmail me aate hain?** Agar Turbancorpn@gmail.com me aate hain to do raste hain:
+- (A) Turbancorpn@gmail.com me Settings > Forwarding me shyla.enterprz@gmail.com add karo (verify hoga), phir ek filter banao: from indiamart.com / tradeindia.com -> Forward to shyla.enterprz@gmail.com. Is README ka setup shyla.enterprz@gmail.com se karo. Reply shyla ke naam se jayega.
+- (B) Ya setup seedha Turbancorpn@gmail.com me karo. Tab reply us address se jayega.
+
+
 1. shyla.enterprz@gmail.com se login karke https://script.google.com kholo, **New project**.
 2. `Code.gs` ka poora text paste karo (server/Code.gs). `SECRET` me koi lamba random text likho.
 3. Upar function dropdown se **setup** chuno aur Run dabao. Gmail aur Sheets ki permission Allow karo.

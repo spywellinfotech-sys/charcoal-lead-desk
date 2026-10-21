@@ -176,7 +176,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
         <option value="new">Sirf naye, kabhi call nahi hua</option>
         <option value="nophone">Number chahiye</option>
       </select>
-      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
+      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">Enquiries (TradeIndia/IndiaMART)</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
       <select id="cState" aria-label="State"><option value="">Sab states</option></select>
     </div>
     <div id="callCard"></div>
@@ -185,8 +185,8 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
 
   <section class="ev" id="viewEnq">
     <div class="panel">
-      <h2>TradeIndia enquiry jodo</h2>
-      <p class="hint">TradeIndia ka email / SMS / lead text yahan paste karo (ek saath kai bhi chalenge, beech me khali line rakho). Ya TradeIndia lead export ki CSV paste karo. Naam, number, email, city aur requirement apne aap nikal jayegi.</p>
+      <h2>Enquiry jodo (TradeIndia / IndiaMART)</h2>
+      <p class="hint">TradeIndia ya IndiaMART ka email / SMS / lead text yahan paste karo (ek saath kai bhi chalenge, beech me khali line rakho). Ya lead export ki CSV paste karo. Naam, number, email, city aur requirement apne aap nikal jayegi.</p>
       <textarea id="enqIn" placeholder="Name: Ramesh Shah&#10;Company: ABC Metals&#10;Mobile: 98xxxxxx10&#10;Email: abc@example.com&#10;City: Ahmedabad&#10;Requirement: Wood charcoal 20 ton"></textarea>
       <div class="row-actions">
         <button class="btn primary" id="enqAdd" type="button">Enquiry jodo</button>
@@ -259,7 +259,7 @@ Rate sirf validity tak mananiye.</textarea></label>
 
   <section class="bar lv" aria-label="Filters">
     <input class="q" id="q" type="search" placeholder="Company, city ya person dhundho" aria-label="Search">
-    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
+    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">Enquiries (TradeIndia/IndiaMART)</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
     <select id="fState" aria-label="State"><option value="">Sab states</option></select>
     <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="ready">✅ Contact ready (phone ya email)</option><option value="both">Phone + Email dono</option><option value="hasphone">Number hai</option><option value="hasemail">Email hai</option><option value="nophone">Number nahi hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
@@ -350,10 +350,10 @@ Rate sirf validity tak mananiye.</textarea></label>
       <label>GSTIN<input id="sGstin"></label>
       <label>Website<input id="sWeb"></label>
     </div>
-    <label>TradeIndia enquiry: pehla reply (WhatsApp/email)<textarea id="sEmsg" style="min-height:110px"></textarea></label>
-    <label>TradeIndia enquiry: follow-up message<textarea id="sEfu" style="min-height:90px"></textarea></label>
-    <label>TradeIndia enquiry: email subject<input id="sEsubj"></label>
-    <label>TradeIndia enquiry: call script<textarea id="sEscript" style="min-height:110px"></textarea></label>
+    <label>Enquiry: pehla reply (WhatsApp/email)<textarea id="sEmsg" style="min-height:110px"></textarea></label>
+    <label>Enquiry: follow-up message<textarea id="sEfu" style="min-height:90px"></textarea></label>
+    <label>Enquiry: email subject<input id="sEsubj"></label>
+    <label>Enquiry: call script<textarea id="sEscript" style="min-height:110px"></textarea></label>
     <label>Message<textarea id="sMsg" style="min-height:130px"></textarea></label>
     <label>Call script (telecalling)<textarea id="sScript" style="min-height:130px"></textarea></label>
     <label>Activated Carbon message<textarea id="sMactc" style="min-height:90px"></textarea></label>
@@ -409,7 +409,7 @@ var DEFAULTS={
  tmsg:'Namaste {person}, main {me} ({brand}) se bol raha hoon. {area} route par gaadi chahiye ({item}). Rate aur availability bataiye. Mera number: {myphone}',
  tscript:'Namaste, main {me} bol raha hoon {brand} se. {area} ki taraf maal bhejna hai, {item} gaadi available hai? Kitna rate padega aur kab tak lag jayegi?',
  emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. Hum charcoal ke manufacturer/supplier hain. Aapko kitni quantity chahiye aur delivery kahan karni hai? Rate, spec aur sample turant bhej denge. Mera number: {myphone}',
- escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne TradeIndia par {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',
+ escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',
  efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. Rate/sample ke liye kab baat kar sakte hain? Mera number: {myphone}',
  esubj:'Re: {product} enquiry - {brand}',
  subject:'Charcoal supply for lead smelting - {brand}',
@@ -554,7 +554,7 @@ function finder(l){
    '<div class="row-actions"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener">Search on Google</a><a class="btn" href="'+m+'" target="_blank" rel="noopener">Google Maps</a><a class="btn" href="'+li+'" target="_blank" rel="noopener">IndiaMART / JustDial</a></div>'+
    '<div class="finder-in">'+(hp?'':'<input class="qp" inputmode="tel" placeholder="Number mila? yahan daalo" aria-label="Number">')+(he?'':'<input class="qe" type="email" placeholder="Email mila? yahan daalo" aria-label="Email">')+'<button class="btn" type="button" data-qsave="'+esc(l.id)+'">Save</button></div></div>';
 }
-var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','TradeIndia Enquiries'],['supplier','Suppliers'],['buyer','Buyers (deal final)'],['transport','Transporters']];
+var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','Enquiries (TradeIndia/IndiaMART)'],['supplier','Suppliers'],['buyer','Buyers (deal final)'],['transport','Transporters']];
 var LOAD={transport:'btnTrans',recycler:'btnCpcb',dealer:'btnDealer',carbide:'btnCarbide',stone:'btnStone',caco3:'btnCaco3',actc:'btnActc',agar:'btnAgar',cpow:'btnCpow'};
 function renderCats(){
   var net=isNet(),cur0=$('fCat').value,cnt={'':0};
@@ -1016,7 +1016,7 @@ function addRows(rows){
     var ex=inb.find(function(l){return (r.phone&&digits(l.phone).slice(-10)===r.phone.slice(-10))||(r.email&&l.email&&l.email.toLowerCase()===r.email.toLowerCase())});
     if(ex){var note=(ex.notes?ex.notes+'\n':'')+today()+': Dobara enquiry'+(r.req?' - '+r.req:'');store.save(Object.assign({},ex,{enqAt:Date.now(),notes:note,enqReq:r.req||ex.enqReq,repliedAt:0,status:(ex.status==='Won'||ex.status==='Lost')?ex.status:'New',nextFollowUp:today()}));merged++;return}
     var l={id:newId(),cat:'inbound',name:r.company||r.person||('Enquiry '+(r.phone||r.email)),person:r.company?r.person:'',city:r.city,state:r.state,capacity:'',phone:r.phone?'+91 '+r.phone.slice(-10):'',email:r.email,
-      notes:'TradeIndia enquiry'+(r.req?': '+r.req:''),enqReq:r.req||'charcoal',enqAt:r.at||Date.now(),src:'TradeIndia',status:'New',nextFollowUp:today(),calls:[],srvId:r.sid||''};
+      notes:(r.src||'Enquiry')+(r.req?': '+r.req:''),enqReq:r.req||'charcoal',enqAt:r.at||Date.now(),src:r.src||(/indiamart/i.test(r.req+' '+(r.email||''))?'IndiaMART':'TradeIndia'),status:'New',nextFollowUp:today(),calls:[],srvId:r.sid||''};
     if(r.replied){l.repliedAt=r.at||Date.now();l.status='Contacted';l.fuStep=1;l.nextFollowUp=addDays(1);l.lastContact=today();l.calls=[{t:l.repliedAt,o:'auto'}]}
     store.save(l);inb.push(l);added++});
   toast(added+' nayi enquiry'+(merged?', '+merged+' dobara aayi':''));return added+merged;
@@ -1048,7 +1048,7 @@ function renderEnq(){
      (k.wa?'<a class="btn primary" target="_blank" rel="noopener" href="'+k.wa+'" data-edone="'+esc(n.id)+'" data-ek="'+(isF?'fu':'reply')+'">WhatsApp bhejo</a>':'')+
      (k.mail?'<a class="btn" href="'+k.mail+'" data-edone="'+esc(n.id)+'" data-ek="'+(isF?'fu':'reply')+'">Email bhejo</a>':'')+
      '<button class="btn" type="button" data-eskip="'+esc(n.id)+'">Baad me</button></div></div>';
-  }else $('enqNext').innerHTML=all.length?'<div class="empty">Sab enquiry ka reply ho chuka hai. Naya enquiry aate hi yahan paste karo.</div>':'<div class="empty">Abhi koi enquiry nahi. TradeIndia ka lead text upar paste karo.</div>';
+  }else $('enqNext').innerHTML=all.length?'<div class="empty">Sab enquiry ka reply ho chuka hai. Naya enquiry aate hi yahan paste karo.</div>':'<div class="empty">Abhi koi enquiry nahi. TradeIndia/IndiaMART ka lead text upar paste karo.</div>';
   var rows=all.slice().sort(function(a,b){var ua=(!a.repliedAt)?1:0,ub=(!b.repliedAt)?1:0;return ub-ua||(b.enqAt||0)-(a.enqAt||0)});
   $('enqList').innerHTML=rows.slice(0,60).map(function(l){
     var k=enqLinks(l),st=ST[l.status||'New']||ST.New,late=!l.repliedAt&&(Date.now()-(l.enqAt||0))>30*60000,isF=!!l.repliedAt,dueF=isF&&l.nextFollowUp&&l.nextFollowUp<=t;
@@ -1064,7 +1064,7 @@ function syncEnq(quiet){
   fetch(u+(u.indexOf('?')<0?'?':'&')+'since='+since).then(function(r){return r.json()}).then(function(a){
     if(!Array.isArray(a)||!a.length){if(!quiet)toast('Naya enquiry nahi hai');return}
     var mx=since;a.forEach(function(x){if(x.at>mx)mx=x.at});
-    addRows(a.map(function(x){return{sid:x.id,at:x.at,replied:!!x.replied,phone:String(x.phone||''),email:x.email||'',person:x.person||'',company:x.company||'',city:x.city||'',state:x.state||'',req:x.req||''}}));
+    addRows(a.map(function(x){return{sid:x.id,at:x.at,src:x.src||'',replied:!!x.replied,phone:String(x.phone||''),email:x.email||'',person:x.person||'',company:x.company||'',city:x.city||'',state:x.state||'',req:x.req||''}}));
     try{localStorage.setItem('cld-enqsince',String(mx))}catch(e){}
   }).catch(function(){if(!quiet)toast('Sync nahi hua. URL check karo')});
 }
@@ -1094,7 +1094,7 @@ function dayCalls(){var t=today(),n=0;leads.forEach(function(l){(l.calls||[]).fo
 function buildPlan(){
   var t=today(),target=Number(settings.dayTarget)||20,items=[],seen={};
   function push(l,why){if(seen[l.id]||items.length>=target)return;seen[l.id]=1;items.push({l:l,why:why})}
-  leads.filter(function(l){return l.cat==='inbound'&&!l.repliedAt&&isOpen(l)}).sort(function(a,b){return (a.enqAt||0)-(b.enqAt||0)}).forEach(function(l){push(l,'TradeIndia enquiry: reply baaki')});
+  leads.filter(function(l){return l.cat==='inbound'&&!l.repliedAt&&isOpen(l)}).sort(function(a,b){return (a.enqAt||0)-(b.enqAt||0)}).forEach(function(l){push(l,'Enquiry: reply baaki')});
   leads.filter(function(l){return isOpen(l)&&l.nextFollowUp&&l.nextFollowUp<=t&&(l.cat!=='inbound'||l.repliedAt)&&!(l.lastContact===t&&l.nextFollowUp>t)}).sort(function(a,b){return a.nextFollowUp.localeCompare(b.nextFollowUp)}).forEach(function(l){push(l,'Follow-up due ('+l.nextFollowUp+')')});
   leads.filter(function(l){return isOpen(l)&&hasPhone(l)&&(!l.status||l.status==='New')&&!(l.calls&&l.calls.length)&&!l.lastContact&&l.cat!=='inbound'&&!MYC[l.cat]}).sort(function(a,b){return (b.email?1:0)-(a.email?1:0)||(Number(b.capacity)||0)-(Number(a.capacity)||0)}).forEach(function(l){push(l,'Naya lead, number hai')});
   return items;
@@ -1118,7 +1118,7 @@ function renderDay(){
   var m2=Math.max.apply(null,days.map(function(x){return x[1]}).concat([1]));
   h+='<h3 style="margin:14px 0 4px">Pichhle 7 din ke contact</h3>'+days.map(function(x){return bar(x[0],x[1],m2,'#1565c0')}).join('');
   var enq=enqLeads(),e7=enq.filter(function(l){return l.enqAt>Date.now()-7*864e5}).length;
-  h+='<p class="hint" style="margin-top:12px">TradeIndia enquiry (7 din): '+e7+' · Total: '+enq.length+' · Reply hue: '+enq.filter(function(l){return l.repliedAt}).length+'</p>';
+  h+='<p class="hint" style="margin-top:12px">Enquiry (7 din): '+e7+' · Total: '+enq.length+' · Reply hue: '+enq.filter(function(l){return l.repliedAt}).length+'</p>';
   var st={};leads.forEach(function(l){if((l.status==='Won'||l.status==='Interested'||l.status==='Sample')&&l.state)st[l.state]=(st[l.state]||0)+1});
   var top=Object.keys(st).sort(function(a,b){return st[b]-st[a]}).slice(0,6);
   if(top.length)h+='<h3 style="margin:14px 0 4px">Interested/Sample/Order wale states</h3>'+top.map(function(k){return bar(k,st[k],st[top[0]],'#0ea5e9')}).join('');
