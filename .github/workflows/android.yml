@@ -61,10 +61,13 @@ jobs:
           name: charcoal-lead-desk-release-apk
           path: charcoal-lead-desk-release.apk
       - name: Publish GitHub Release
-        if: env.KS_PASS != '' && env.KEYSTORE_B64 != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v1.0.${{ github.run_number }}" charcoal-lead-desk-release.apk \
+          cp android/app/build/outputs/apk/debug/app-debug.apk charcoal-lead-desk-debug.apk
+          FILE=charcoal-lead-desk-debug.apk
+          NOTE="Debug APK (personal use)"
+          if [ -f charcoal-lead-desk-release.apk ]; then FILE=charcoal-lead-desk-release.apk; NOTE="Signed release APK"; fi
+          gh release create "v1.0.${{ github.run_number }}" "$FILE" \
             --title "Charcoal Lead Desk 1.0.${{ github.run_number }}" \
-            --notes "Signed release APK"
+            --notes "$NOTE"
