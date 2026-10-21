@@ -33,6 +33,10 @@ jobs:
           grep -n "versionCode\|versionName" android/app/build.gradle
       - name: Copy web app into Android
         run: npx cap sync android
+      - name: Use fixed signing key (so updates install over old app)
+        run: |
+          mkdir -p ~/.android
+          cp ci/debug.keystore ~/.android/debug.keystore
       - name: Build debug APK
         run: |
           cd android
