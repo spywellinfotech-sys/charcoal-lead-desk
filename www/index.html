@@ -79,6 +79,7 @@ body[data-view="day"] #viewDay,body[data-view="ord"] #viewOrd{display:flex}
 .tab{white-space:nowrap;padding:9px 13px}
 .ev{display:none;flex-direction:column;gap:12px}
 body[data-view="enq"] .ev{display:flex}
+.lead.my .cap{display:none}
 .ev textarea{min-height:110px;width:100%}
 .eage{font-size:12px;font-weight:700;color:var(--muted)}
 .eage.late{color:#b91c1c}
@@ -174,7 +175,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
         <option value="new">Sirf naye, kabhi call nahi hua</option>
         <option value="nophone">Number chahiye</option>
       </select>
-      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option></select>
+      <select id="cCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
       <select id="cState" aria-label="State"><option value="">Sab states</option></select>
     </div>
     <div id="callCard"></div>
@@ -257,7 +258,7 @@ Rate sirf validity tak mananiye.</textarea></label>
 
   <section class="bar lv" aria-label="Filters">
     <input class="q" id="q" type="search" placeholder="Company, city ya person dhundho" aria-label="Search">
-    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option></select>
+    <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Lead Smelters</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option><option value="stone">Stone Exporters</option><option value="actc">Activated Carbon Manufacturers</option><option value="agar">Agarbatti Manufacturers</option><option value="cpow">Charcoal Powder Manufacturers</option><option value="caco3">CaCO3 Manufacturers</option><option value="inbound">TradeIndia Enquiries</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select>
     <select id="fState" aria-label="State"><option value="">Sab states</option></select>
     <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="ready">✅ Contact ready (phone ya email)</option><option value="both">Phone + Email dono</option><option value="hasphone">Number hai</option><option value="hasemail">Email hai</option><option value="nophone">Number nahi hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
@@ -291,7 +292,7 @@ Rate sirf validity tak mananiye.</textarea></label>
     <form id="leadForm" autocomplete="off">
       <input type="hidden" id="fId">
       <div class="grid2">
-        <label>Category<select id="fCatIn"><option value="recycler">Lead Smelter</option><option value="dealer">Charcoal Dealer</option><option value="carbide">Calcium Carbide Manufacturer</option><option value="stone">Pebble / Natural Stone Exporter</option><option value="actc">Activated Carbon Manufacturer</option><option value="agar">Agarbatti Manufacturer</option><option value="cpow">Charcoal Powder Manufacturer</option><option value="caco3">Calcium Carbonate (CaCO3) Manufacturer</option></select></label>
+        <label>Category<select id="fCatIn"><option value="recycler">Lead Smelter</option><option value="dealer">Charcoal Dealer</option><option value="carbide">Calcium Carbide Manufacturer</option><option value="stone">Pebble / Natural Stone Exporter</option><option value="actc">Activated Carbon Manufacturer</option><option value="agar">Agarbatti Manufacturer</option><option value="cpow">Charcoal Powder Manufacturer</option><option value="caco3">Calcium Carbonate (CaCO3) Manufacturer</option><option value="supplier">Supplier (maal dene wale)</option><option value="buyer">Buyer (deal final)</option><option value="transport">Transporter</option></select></label>
         <label>Company naam<input id="fName" required></label>
         <label>Contact person<input id="fPerson"></label>
         <label>City<input id="fCity"></label>
@@ -301,6 +302,7 @@ Rate sirf validity tak mananiye.</textarea></label>
         <label>Mobile / WhatsApp<input id="fPhone" inputmode="tel" placeholder="10 digit number"></label>
         <label>Email<input id="fEmail" type="email"></label>
       </div>
+      <div class="grid2" id="myFields" hidden style="margin-top:10px"><label>Kya dete / lete hain ya gaadi ka type<input id="fItem" placeholder="jaise wood charcoal, 10 wheeler"></label><label>Route / area<input id="fArea" placeholder="jaise UP to Gujarat"></label><label>Rate / terms<input id="fRate" placeholder="jaise Rs 40000/ton, 30 din credit"></label></div>
       <label style="margin-top:10px">Notes<textarea id="fNotes" placeholder="Rate, sample, kitna charcoal chahiye, agla step"></textarea></label>
       <div class="row-actions" style="margin-top:12px">
         <button class="btn primary" type="submit">Save</button>
@@ -366,6 +368,9 @@ Rate sirf validity tak mananiye.</textarea></label>
     <label>Carbide call script<textarea id="sCScript" style="min-height:130px"></textarea></label>
     <label>Dealer message<textarea id="sDMsg" style="min-height:90px"></textarea></label>
     <label>Dealer call script<textarea id="sDScript" style="min-height:130px"></textarea></label>
+    <label>Supplier message<textarea id="sUMsg" style="min-height:90px"></textarea></label>
+    <label>Buyer message<textarea id="sBMsg" style="min-height:90px"></textarea></label>
+    <label>Transporter message<textarea id="sTMsg" style="min-height:90px"></textarea></label>
   </details>
 
   <section class="lv" id="list" aria-live="polite"></section>
@@ -394,6 +399,12 @@ var STATUSES=[
 var ST={};STATUSES.forEach(function(s){ST[s.k]=s});
 var DEFAULTS={
  me:'',brand:'Shyla Enterprise',phone:'9720583123',email:'shyla.enterpez@gmail.com',gstin:'09ERTPD7563P1ZN',web:'www.gangastone.com',
+ umsg:'Namaste {person}, main {me} ({brand}) se bol raha hoon. Humein {item} chahiye. Aapka latest rate, minimum quantity aur delivery time bataiye. Mera number: {myphone}',
+ uscript:'Namaste, main {me} bol raha hoon {brand} se. Kya meri baat {person} ji se ho rahi hai?\n\nHumein {item} chahiye. Aaj ka rate kya hai, minimum quantity aur delivery kitne din me hogi? Payment terms kya rahenge?',
+ bmsg:'Namaste {person}, {brand} se. Pichhle order ke liye dhanyavaad. Agle order ki requirement ho to bata dijiye, fresh rate aur stock ready hai. Mera number: {myphone}',
+ bscript:'Namaste, main {me} bol raha hoon {brand} se. Pichhla maal kaisa raha? Agla order kab aur kitna chahiye? Payment ka kya status hai?',
+ tmsg:'Namaste {person}, main {me} ({brand}) se bol raha hoon. {area} route par gaadi chahiye ({item}). Rate aur availability bataiye. Mera number: {myphone}',
+ tscript:'Namaste, main {me} bol raha hoon {brand} se. {area} ki taraf maal bhejna hai, {item} gaadi available hai? Kitna rate padega aur kab tak lag jayegi?',
  emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. Hum charcoal ke manufacturer/supplier hain. Aapko kitni quantity chahiye aur delivery kahan karni hai? Rate, spec aur sample turant bhej denge. Mera number: {myphone}',
  escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne TradeIndia par {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',
  efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. Rate/sample ke liye kab baat kar sakte hain? Mera number: {myphone}',
@@ -430,12 +441,14 @@ function copy(text){
   function fb(){var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('Copy ho gaya')}catch(e){toast('Select karke copy karo')}t.remove()}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Copy ho gaya')},fb)}else fb();
 }
-var PILL={inbound:'Enquiry',carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
-var PRE={inbound:'e',dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
+var MYC={supplier:1,buyer:1,transport:1};
+function inCat(l,c){return c==='buyer'?(l.cat==='buyer'||l.status==='Won'):(l.cat||'recycler')===c}
+var PILL={supplier:'Supplier',buyer:'Buyer',transport:'Transporter',inbound:'Enquiry',carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
+var PRE={supplier:'u',buyer:'b',transport:'t',inbound:'e',dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
 function tpl(k,l){if(k==='msg'&&l&&l.fuText)return l.fuText;var c=l&&l.cat;var pre=PRE[c]||'';return (pre&&settings[pre+k])||settings[k]||''}
 function fill(t,l){
   var s=settings;
-  return t.replace(/\{product\}/g,l.enqReq||'charcoal').replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
+  return t.replace(/\{item\}/g,l.item||'maal').replace(/\{area\}/g,l.area||'').replace(/\{product\}/g,l.enqReq||'charcoal').replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
 }
 function sig(){var s=settings;return '\n\n--\n'+(s.brand||'')+(s.gstin?'\nGSTIN: '+s.gstin:'')+(s.phone?'\nMobile/WhatsApp: +91 '+s.phone:'')+(s.email?'\nEmail: '+s.email:'')+(s.web?'\nWeb: '+s.web:'')}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -468,7 +481,7 @@ function stateOptions(){
   $('fState').innerHTML='<option value="">Sab states</option>'+names.map(function(n){return'<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join('');
   $('stateList').innerHTML=names.map(function(n){return'<option value="'+esc(n)+'">'}).join('');
 }
-function renderStats(){renderStatsFor(leads.filter(function(l){var c=$('fCat').value;return !c||(l.cat||'recycler')===c}))}
+function renderStats(){renderStatsFor(leads.filter(function(l){var c=$('fCat').value;return !c||inCat(l,c)}))}
 function renderStatsFor(leads){
   var tot=leads.reduce(function(a,l){return a+(Number(l.capacity)||0)},0);
   var contacted=leads.filter(function(l){return l.status&&l.status!=='New'}).length;
@@ -494,7 +507,7 @@ function filtered(){
     if(ct==='both'&&!(hp&&he))return false;
     if(ct==='hasemail'&&!he)return false;
     if(ct==='due'&&!(l.nextFollowUp&&l.nextFollowUp<=today()&&l.status!=='Won'&&l.status!=='Lost'))return false;
-    var fc=$('fCat').value;if(fc&&(l.cat||'recycler')!==fc)return false;
+    var fc=$('fCat').value;if(fc&&!inCat(l,fc))return false;
     if(ft&&(l.status||'New')!==ft)return false;
     if(q&&[l.name,l.city,l.state,l.person].join(' ').toLowerCase().indexOf(q)<0)return false;
     return true});
@@ -534,11 +547,11 @@ function finder(l){
    '<div class="row-actions"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener">Search on Google</a><a class="btn" href="'+m+'" target="_blank" rel="noopener">Google Maps</a><a class="btn" href="'+li+'" target="_blank" rel="noopener">IndiaMART / JustDial</a></div>'+
    '<div class="finder-in">'+(hp?'':'<input class="qp" inputmode="tel" placeholder="Number mila? yahan daalo" aria-label="Number">')+(he?'':'<input class="qe" type="email" placeholder="Email mila? yahan daalo" aria-label="Email">')+'<button class="btn" type="button" data-qsave="'+esc(l.id)+'">Save</button></div></div>';
 }
-var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','TradeIndia Enquiries']];
+var CATS=[['','Sab'],['recycler','Lead Smelters'],['dealer','Charcoal Dealers'],['carbide','Carbide'],['stone','Stone Exporters'],['caco3','CaCO3'],['actc','Activated Carbon'],['agar','Agarbatti'],['cpow','Charcoal Powder'],['inbound','TradeIndia Enquiries'],['supplier','Suppliers'],['buyer','Buyers (deal final)'],['transport','Transporters']];
 var LOAD={recycler:'btnCpcb',dealer:'btnDealer',carbide:'btnCarbide',stone:'btnStone',caco3:'btnCaco3',actc:'btnActc',agar:'btnAgar',cpow:'btnCpow'};
 function renderCats(){
   var cur0=$('fCat').value,cnt={'':leads.length};
-  leads.forEach(function(l){var c=l.cat||'recycler';cnt[c]=(cnt[c]||0)+1});
+  leads.forEach(function(l){var c=l.cat||'recycler';cnt[c]=(cnt[c]||0)+1;if(l.status==='Won'&&c!=='buyer')cnt.buyer=(cnt.buyer||0)+1});
   $('catTabs').innerHTML='<select id="catSel" aria-label="Category">'+CATS.map(function(c){return'<option value="'+c[0]+'"'+(c[0]===cur0?' selected':'')+'>'+(c[0]===''?'Sab categories':c[1])+' ('+(cnt[c[0]]||0)+')</option>'}).join('')+'</select>';
   Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=!!cur0&&cur0!==k});
 }
@@ -550,12 +563,13 @@ function render(){renderCats();
   $('list').innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+r.map(function(l){
     var st=ST[l.status||'New']||ST.New,cap=Number(l.capacity)||0;
     var opts=STATUSES.map(function(s){return'<option value="'+s.k+'"'+(s.k===(l.status||'New')?' selected':'')+'>'+s.l+'</option>'}).join('');
-    return'<article class="lead" style="--st:var('+st.c+')" data-id="'+esc(l.id)+'">'+
+    return'<article class="lead'+(MYC[l.cat]?' my':'')+'" style="--st:var('+st.c+')" data-id="'+esc(l.id)+'">'+
      '<div class="lead-head"><div><div class="name">'+esc(l.name)+((l.cat&&l.cat!=='recycler')?' <span class="pill" style="--pill-bg:var(--bg);--pill-fg:var(--ink)">'+(l.cat==='carbide'?'Carbide':PILL[l.cat]||'Dealer')+'</span>':'')+'</div><div class="meta">'+esc([l.city,l.state].filter(Boolean).join(', ')||'Location nahi')+(l.person?' · '+esc(l.person):'')+'</div></div>'+
      '<span class="pill" style="--pill-bg:var('+st.bg+');--pill-fg:var('+st.fg+')">'+st.l+'</span></div>'+
      '<div class="cap"><div class="cap-line"><span>'+(cap?fmt(cap)+' t/yr':'Capacity pata nahi')+'</span><span>'+(cap?'~'+fmt(Math.round(cap/12))+' t/mahina':'')+'</span></div>'+
      '<div class="track"><div class="fill" style="width:'+(cap?Math.max(2,cap/max*100):0)+'%"></div></div>'+(l.capNote?'<div class="note">Source: '+esc(l.capNote)+'</div>':'')+'</div>'+
      '<div class="contact">'+contactBox('call',l)+contactBox('wa',l)+contactBox('mail',l)+'</div>'+finder(l)+fuRow(l)+
+     ((l.item||l.area||l.rate)?'<div class="ereq">'+[l.item,l.area,l.rate].filter(Boolean).map(esc).join(' · ')+'</div>':'')+
      (l.notes?'<div class="note">'+esc(l.notes)+'</div>':'')+
      '<div class="lead-foot"><select data-status="'+esc(l.id)+'" aria-label="Status">'+opts+'</select>'+
      '<button class="btn" type="button" data-logbtn="'+esc(l.id)+'">Aaj contact kiya</button>'+
@@ -568,14 +582,16 @@ function find(id){return leads.find(function(l){return l.id===id})}
 function update(id,patch){var l=find(id);if(!l)return;store.save(Object.assign({},l,patch)).catch(function(){toast('Save nahi hua. Dobara try karo')})}
 
 /* form */
+function showMy(){$('myFields').hidden=!MYC[$('fCatIn').value]}
 function openForm(l){
   $('importPanel').hidden=true;$('formPanel').hidden=false;
   $('formTitle').textContent=l?'Company edit':'Nayi company';
   $('fId').value=l?l.id:'';$('fName').value=l?l.name||'':'';$('fPerson').value=l?l.person||'':'';$('fCity').value=l?l.city||'':'';
   $('fStateIn').value=l?l.state||'':'';$('fCap').value=l&&l.capacity?l.capacity:'';$('fCapNote').value=l?l.capNote||'':'';
-  $('fCatIn').value=(l&&l.cat)||'recycler';$('fPhone').value=l?l.phone||'':'';$('fEmail').value=l?l.email||'':'';$('fNotes').value=l?l.notes||'':'';
+  $('fCatIn').value=(l&&l.cat)||$('fCat').value||'recycler';$('fItem').value=l?l.item||'':'';$('fArea').value=l?l.area||'':'';$('fRate').value=l?l.rate||'':'';showMy();$('fPhone').value=l?l.phone||'':'';$('fEmail').value=l?l.email||'':'';$('fNotes').value=l?l.notes||'':'';
   $('formPanel').scrollIntoView({behavior:'smooth',block:'start'});$('fName').focus();
 }
+$('fCatIn').addEventListener('change',showMy);
 $('btnAdd').onclick=function(){openForm(null)};
 $('btnCancel').onclick=function(){$('formPanel').hidden=true};
 $('leadForm').onsubmit=function(e){
@@ -584,7 +600,7 @@ $('leadForm').onsubmit=function(e){
   var rec=Object.assign({status:'New'},old||{},{
     id:id||newId(),name:$('fName').value.trim(),person:$('fPerson').value.trim(),city:$('fCity').value.trim(),state:$('fStateIn').value.trim(),
     capacity:Number(String($('fCap').value).replace(/[^\d.]/g,''))||null,capNote:$('fCapNote').value.trim(),
-    cat:$('fCatIn').value,phone:$('fPhone').value.trim(),email:$('fEmail').value.trim(),notes:$('fNotes').value.trim()});
+    item:$('fItem').value.trim(),area:$('fArea').value.trim(),rate:$('fRate').value.trim(),cat:$('fCatIn').value,phone:$('fPhone').value.trim(),email:$('fEmail').value.trim(),notes:$('fNotes').value.trim()});
   store.save(rec).then(function(){$('formPanel').hidden=true;toast('Save ho gaya')},function(){toast('Save nahi hua. Dobara try karo')});
 };
 
@@ -628,7 +644,7 @@ $('list').addEventListener('change',function(e){var s=e.target.closest('[data-st
 /* filters + settings */
 STATUSES.forEach(function(s){var o=document.createElement('option');o.value=s.k;o.textContent=s.l;$('fStatus').appendChild(o)});
 ['q','fContact','fCat','fState','fStatus','fSort'].forEach(function(id){$(id).addEventListener('input',function(){shown=100;render()})});
-var map={sEmail:'email',sGstin:'gstin',sWeb:'web',sEmsg:'emsg',sEfu:'efu',sEsubj:'esubj',sEscript:'escript',sMe:'me',sBrand:'brand',sPhone:'phone',sSubject:'subject',sMsg:'msg',sScript:'script',sMactc:'vmsg',sSactc:'vscript',sMagar:'gmsg',sSagar:'gscript',sMcpow:'pmsg',sScpow:'pscript',sKMsg:'kmsg',sKScript:'kscript',sSMsg:'smsg',sSScript:'sscript',sCMsg:'cmsg',sCScript:'cscript',sDMsg:'dmsg',sDScript:'dscript'};
+var map={sUMsg:'umsg',sBMsg:'bmsg',sTMsg:'tmsg',sEmail:'email',sGstin:'gstin',sWeb:'web',sEmsg:'emsg',sEfu:'efu',sEsubj:'esubj',sEscript:'escript',sMe:'me',sBrand:'brand',sPhone:'phone',sSubject:'subject',sMsg:'msg',sScript:'script',sMactc:'vmsg',sSactc:'vscript',sMagar:'gmsg',sSagar:'gscript',sMcpow:'pmsg',sScpow:'pscript',sKMsg:'kmsg',sKScript:'kscript',sSMsg:'smsg',sSScript:'sscript',sCMsg:'cmsg',sCScript:'cscript',sDMsg:'dmsg',sDScript:'dscript'};
 Object.keys(map).forEach(function(id){
   $(id).value=settings[map[id]]||'';
   $(id).addEventListener('input',function(){settings[map[id]]=$(id).value;persist('cld-settings',settings);render()});
@@ -820,7 +836,7 @@ function buildQueue(){
   var r=leads.filter(function(l){
     if(!isOpen(l))return false;
     if(cs&&l.state!==cs)return false;
-    var cc=$('cCat').value;if(cc&&(l.cat||'recycler')!==cc)return false;
+    var cc=$('cCat').value;if(cc&&!inCat(l,cc))return false;
     var ph=hasPhone(l);
     if(mode==='nophone')return !ph;
     if(!ph)return false;
