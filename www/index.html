@@ -196,6 +196,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="ready">✅ Contact ready (phone ya email)</option><option value="both">Phone + Email dono</option><option value="hasphone">Number hai</option><option value="hasemail">Email hai</option><option value="nophone">Number nahi hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
     <select id="fSort" aria-label="Sort">
+      <option value="contact">Contact wale pehle (number mila)</option>
       <option value="cap">Capacity: zyada pehle</option>
       <option value="name">Naam A-Z</option>
       <option value="recent">Haal ka contact</option>
@@ -420,6 +421,7 @@ function filtered(){
     if(q&&[l.name,l.city,l.state,l.person].join(' ').toLowerCase().indexOf(q)<0)return false;
     return true});
   r.sort(function(a,b){
+    if(so==='contact'){var ra=(digits(a.phone).length>=10?2:0)+(a.email?1:0),rb=(digits(b.phone).length>=10?2:0)+(b.email?1:0);if(ra!==rb)return rb-ra;return (Number(b.capacity)||0)-(Number(a.capacity)||0)}
     if(so==='name')return String(a.name).localeCompare(String(b.name));
     if(so==='recent')return String(b.lastContact||'').localeCompare(String(a.lastContact||''));
     return (Number(b.capacity)||0)-(Number(a.capacity)||0)});
