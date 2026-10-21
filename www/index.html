@@ -194,7 +194,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
         <button class="btn" id="enqClip" type="button">Clipboard se lao</button>
       </div>
     </div>
-    <div class="panel"><h2>Auto-sync (auto-reply server)</h2><p class="hint">Google Apps Script setup ke baad uska URL yahan daalo. Naye enquiry app kholte hi aa jayenge, aur jin par server ne reply bhej diya wo "Contact hue" me dikhenge.</p><label>Sync URL (key ke saath)<input id="enqUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec?key=..."></label><div class="row-actions"><button class="btn" id="enqSync" type="button">Abhi sync karo</button></div><h2 style="margin-top:14px">Auto backup &rarr; Google Drive</h2><p class="hint">Isi URL se roz apne aap poora data (leads, orders, settings) aapke Drive ke "Shyla Backups" folder me save hoga. Last 14 din ke backup rehte hain.</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="bkAuto" style="width:auto"> Roz automatic backup chalu</label><div id="bkDrvInfo" class="hint"></div><div class="row-actions"><button class="btn" id="bkDrive" type="button">Abhi Drive backup</button></div></div>
+    <div class="panel"><h2>Auto-sync (auto-reply server)</h2><p class="hint">Google Apps Script setup ke baad uska URL yahan daalo. Naye enquiry app kholte hi aa jayenge, aur jin par server ne reply bhej diya wo "Contact hue" me dikhenge.</p><label>Sync URL (key ke saath)<input id="enqUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec?key=..."></label><div class="row-actions"><button class="btn" id="enqSync" type="button">Abhi sync karo</button></div><h2 style="margin-top:14px">Auto backup &rarr; Google Drive</h2><p class="hint">Isi URL se roz apne aap poora data (leads, orders, settings) aapke Drive ke "Shyla Backups" folder me save hoga. Last 14 din ke backup rehte hain.</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="bkAuto" style="width:auto"> Roz automatic backup chalu</label><div id="bkDrvInfo" class="hint"></div><div class="row-actions"><button class="btn" id="bkDrive" type="button">Abhi Drive backup</button><button class="btn" id="bkDrvRes" type="button">Drive se restore</button></div></div>
     <div id="enqStats" class="stats"></div>
     <div id="enqNext"></div>
     <div id="enqList" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1088,6 +1088,12 @@ function autoDrive(){if(!settings.bkAuto)return;var t=Date.parse(localStorage.ge
 $('bkAuto').checked=!!settings.bkAuto;
 $('bkAuto').addEventListener('change',function(){settings.bkAuto=this.checked;persist('cld-settings',settings);if(this.checked)driveBackup(false)});
 $('bkDrive').addEventListener('click',function(){driveBackup(false)});
+$('bkDrvRes').addEventListener('click',function(){
+  var u=(settings.enqUrl||'').trim();if(!u){toast('Pehle sync URL daalo');return}
+  var b=this;if(!b.dataset.arm){b.dataset.arm=1;b.textContent='Pakka? Dobara dabao';setTimeout(function(){delete b.dataset.arm;b.textContent='Drive se restore'},5000);return}
+  delete b.dataset.arm;b.textContent='Drive se restore';
+  fetch(u+(u.indexOf('?')<0?'?':'&')+'action=restore').then(function(r){return r.text()}).then(function(t){restore(t)}).catch(function(){toast('Drive se backup nahi mila. URL/net check karo')});
+});
 drvInfo();setTimeout(autoDrive,9000);setInterval(autoDrive,3600000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)autoDrive()});
 

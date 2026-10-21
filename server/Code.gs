@@ -105,6 +105,12 @@ function processEnquiries() {
 
 /** App is URL se naye enquiry leti hai:  <web app url>?key=SECRET&since=<ms> */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'restore') {
+    if (e.parameter.key !== CFG.SECRET) return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
+    var fi = DriveApp.getFoldersByName('Shyla Backups');
+    if (fi.hasNext()) { var ff = fi.next().getFilesByName('shyla-latest.json'); if (ff.hasNext()) return ContentService.createTextOutput(ff.next().getBlob().getDataAsString()).setMimeType(ContentService.MimeType.JSON); }
+    return ContentService.createTextOutput('{}').setMimeType(ContentService.MimeType.JSON);
+  }
   if (!e || !e.parameter || e.parameter.key !== CFG.SECRET) return ContentService.createTextOutput('[]').setMimeType(ContentService.MimeType.JSON);
   var since = Number(e.parameter.since) || 0, out = [];
   sheet_().getDataRange().getValues().slice(1).forEach(function (x) {
