@@ -131,6 +131,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
 .chip[aria-selected=true]{background:var(--ember);color:#fff;border-color:var(--ember)}
 .chip[aria-selected=true] span{background:rgba(255,255,255,.25);color:#fff}
 #fCat,#cCat{display:none}
+#catSel{font:700 17px var(--f-body);color:var(--ember);border-radius:12px;padding:12px 14px;border:2px solid var(--ember);background:#fff}
 </style>
 </head><body>
 
@@ -415,7 +416,7 @@ var LOAD={recycler:'btnCpcb',dealer:'btnDealer',carbide:'btnCarbide',stone:'btnS
 function renderCats(){
   var cur0=$('fCat').value,cnt={'':leads.length};
   leads.forEach(function(l){var c=l.cat||'recycler';cnt[c]=(cnt[c]||0)+1});
-  $('catTabs').innerHTML=CATS.map(function(c){return'<button type="button" role="tab" class="chip" aria-selected="'+(c[0]===cur0)+'" data-cat="'+c[0]+'">'+c[1]+' <span>'+(cnt[c[0]]||0)+'</span></button>'}).join('');
+  $('catTabs').innerHTML='<select id="catSel" aria-label="Category">'+CATS.map(function(c){return'<option value="'+c[0]+'"'+(c[0]===cur0?' selected':'')+'>'+(c[0]===''?'Sab categories':c[1])+' ('+(cnt[c[0]]||0)+')</option>'}).join('')+'</select>';
   Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=!!cur0&&cur0!==k});
 }
 function render(){renderCats();
@@ -596,8 +597,7 @@ $('btnStone').onclick=function(){
   step();
 };
 
-document.addEventListener('click',function(e){var t=e.target.closest('[data-cat]');if(!t||!t.classList.contains('chip'))return;
-  $('fCat').value=t.dataset.cat;$('cCat').value=t.dataset.cat;shown=100;cur=null;render()});
+
 /* CaCO3 manufacturers */
 $('btnCaco3').onclick=function(){
   var b=this,lab=b.textContent;if(b.dataset.busy)return;
@@ -618,8 +618,7 @@ $('btnCaco3').onclick=function(){
   step();
 };
 
-document.addEventListener('click',function(e){var t=e.target.closest('[data-cat]');if(!t||!t.classList.contains('chip'))return;
-  $('fCat').value=t.dataset.cat;$('cCat').value=t.dataset.cat;shown=100;cur=null;render()});
+
 /* Activated Carbon */
 $('btnActc').onclick=function(){
   var b=this,lab=b.textContent;if(b.dataset.busy)return;
@@ -640,8 +639,7 @@ $('btnActc').onclick=function(){
   step();
 };
 
-document.addEventListener('click',function(e){var t=e.target.closest('[data-cat]');if(!t||!t.classList.contains('chip'))return;
-  $('fCat').value=t.dataset.cat;$('cCat').value=t.dataset.cat;shown=100;cur=null;render()});
+
 /* Agarbatti */
 $('btnAgar').onclick=function(){
   var b=this,lab=b.textContent;if(b.dataset.busy)return;
@@ -662,8 +660,7 @@ $('btnAgar').onclick=function(){
   step();
 };
 
-document.addEventListener('click',function(e){var t=e.target.closest('[data-cat]');if(!t||!t.classList.contains('chip'))return;
-  $('fCat').value=t.dataset.cat;$('cCat').value=t.dataset.cat;shown=100;cur=null;render()});
+
 /* Charcoal Powder */
 $('btnCpow').onclick=function(){
   var b=this,lab=b.textContent;if(b.dataset.busy)return;
@@ -684,8 +681,9 @@ $('btnCpow').onclick=function(){
   step();
 };
 
-document.addEventListener('click',function(e){var t=e.target.closest('[data-cat]');if(!t||!t.classList.contains('chip'))return;
-  $('fCat').value=t.dataset.cat;$('cCat').value=t.dataset.cat;shown=100;cur=null;render()});
+
+document.addEventListener('change',function(e){if(!e.target||e.target.id!=='catSel')return;
+  $('fCat').value=e.target.value;$('cCat').value=e.target.value;shown=100;cur=null;render()});
 /* telecalling */
 var OUT={noanswer:'Phone nahi utha',callback:'Baad me call',interested:'Interested',sample:'Sample chahiye',notinterested:'Interested nahi',wrong:'Galat number'};
 var cur=null,skipped={};
