@@ -36,6 +36,26 @@ jobs:
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
           sed -i "s/__VER__/1.0.${{ github.run_number }}/" www/index.html
+      - name: Pin debug signing to fixed key
+        run: |
+          python3 - <<'PY'
+          p='android/app/build.gradle'
+          s=open(p).read()
+          blk="""
+              signingConfigs {
+                  debug {
+                      storeFile file('../../ci/debug.keystore')
+                      storePassword 'android'
+                      keyAlias 'androiddebugkey'
+                      keyPassword 'android'
+                  }
+              }
+          """
+          i=s.index('android {')+len('android {')
+          s=s[:i]+blk+s[i:]
+          open(p,'w').write(s)
+          PY
+          keytool -list -keystore ci/debug.keystore -storepass android | grep -i fingerprint
       - name: Copy web app into Android
         run: npx cap sync android
       - name: Use fixed signing key (so updates install over old app)
@@ -47,6 +67,8 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs app/build/outputs/apk/debug/app-debug.apk | grep -i "SHA-256"
       - name: Build signed release APK
         if: env.KS_PASS != '' && env.KEYSTORE_B64 != ''
         run: |
