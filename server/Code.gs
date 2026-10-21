@@ -119,3 +119,28 @@ function setup() {
   ScriptApp.newTrigger('processEnquiries').timeBased().everyMinutes(1).create();
   sheet_();
 }
+
+
+/** Auto backup: app POST karti hai  <web app url>?key=SECRET&action=backup  (body = backup JSON).
+ *  Drive me "Shyla Backups" folder banta hai: shyla-latest.json + roz ki dated file (last 14 rakhi jati hain). */
+function doPost(e) {
+  function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+  try {
+    if (!e || !e.parameter || e.parameter.key !== CFG.SECRET) return out({ ok: false, error: 'key galat' });
+    var body = e.postData && e.postData.contents;
+    if (!body || body.length < 20) return out({ ok: false, error: 'khali data' });
+    var it = DriveApp.getFoldersByName('Shyla Backups');
+    var folder = it.hasNext() ? it.next() : DriveApp.createFolder('Shyla Backups');
+    function put(name) {
+      var f = folder.getFilesByName(name);
+      if (f.hasNext()) f.next().setContent(body); else folder.createFile(name, body, 'application/json');
+    }
+    put('shyla-latest.json');
+    put('shyla-' + Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd') + '.json');
+    var dated = [], all = folder.getFiles();
+    while (all.hasNext()) { var x = all.next(); if (/^shyla-\d{4}-\d{2}-\d{2}\.json$/.test(x.getName())) dated.push(x); }
+    dated.sort(function (a, b) { return a.getName() < b.getName() ? 1 : -1; });
+    dated.slice(14).forEach(function (x) { x.setTrashed(true); });
+    return out({ ok: true, size: body.length });
+  } catch (err) { return out({ ok: false, error: String(err) }); }
+}

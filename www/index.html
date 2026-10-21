@@ -194,7 +194,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
         <button class="btn" id="enqClip" type="button">Clipboard se lao</button>
       </div>
     </div>
-    <div class="panel"><h2>Auto-sync (auto-reply server)</h2><p class="hint">Google Apps Script setup ke baad uska URL yahan daalo. Naye enquiry app kholte hi aa jayenge, aur jin par server ne reply bhej diya wo "Contact hue" me dikhenge.</p><label>Sync URL (key ke saath)<input id="enqUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec?key=..."></label><div class="row-actions"><button class="btn" id="enqSync" type="button">Abhi sync karo</button></div></div>
+    <div class="panel"><h2>Auto-sync (auto-reply server)</h2><p class="hint">Google Apps Script setup ke baad uska URL yahan daalo. Naye enquiry app kholte hi aa jayenge, aur jin par server ne reply bhej diya wo "Contact hue" me dikhenge.</p><label>Sync URL (key ke saath)<input id="enqUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec?key=..."></label><div class="row-actions"><button class="btn" id="enqSync" type="button">Abhi sync karo</button></div><h2 style="margin-top:14px">Auto backup &rarr; Google Drive</h2><p class="hint">Isi URL se roz apne aap poora data (leads, orders, settings) aapke Drive ke "Shyla Backups" folder me save hoga. Last 14 din ke backup rehte hain.</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="bkAuto" style="width:auto"> Roz automatic backup chalu</label><div id="bkDrvInfo" class="hint"></div><div class="row-actions"><button class="btn" id="bkDrive" type="button">Abhi Drive backup</button></div></div>
     <div id="enqStats" class="stats"></div>
     <div id="enqNext"></div>
     <div id="enqList" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -1075,6 +1075,21 @@ $('enqUrl').value=settings.enqUrl||'';
 $('enqUrl').addEventListener('input',function(){settings.enqUrl=this.value;persist('cld-settings',settings)});
 $('enqSync').addEventListener('click',function(){syncEnq(false)});
 setTimeout(function(){syncEnq(true)},4000);
+
+function drvInfo(){var t=localStorage.getItem('cld-drvbackup');var el=$('bkDrvInfo');if(el)el.textContent=t?'Aakhri Drive backup: '+t.slice(0,16).replace('T',' '):'Drive backup abhi nahi hua.'}
+function driveBackup(quiet){
+  var u=(settings.enqUrl||'').trim();if(!u){if(!quiet)toast('Pehle sync URL daalo');return}
+  fetch(u+(u.indexOf('?')<0?'?':'&')+'action=backup',{method:'POST',body:bkData()}).then(function(r){return r.json()}).then(function(j){
+    if(j&&j.ok){try{localStorage.setItem('cld-drvbackup',new Date().toISOString());localStorage.setItem('cld-lastbackup',new Date().toISOString())}catch(e){}drvInfo();bkInfo();if(!quiet)toast('Drive me backup ho gaya')}
+    else if(!quiet)toast('Backup nahi hua: '+((j&&j.error)||'script update karo'))
+  }).catch(function(){if(!quiet)toast('Backup nahi hua. Net/URL check karo')});
+}
+function autoDrive(){if(!settings.bkAuto)return;var t=Date.parse(localStorage.getItem('cld-drvbackup')||'')||0;if(Date.now()-t>20*3600*1000)driveBackup(true)}
+$('bkAuto').checked=!!settings.bkAuto;
+$('bkAuto').addEventListener('change',function(){settings.bkAuto=this.checked;persist('cld-settings',settings);if(this.checked)driveBackup(false)});
+$('bkDrive').addEventListener('click',function(){driveBackup(false)});
+drvInfo();setTimeout(autoDrive,9000);setInterval(autoDrive,3600000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)autoDrive()});
 
 $('enqAdd').addEventListener('click',function(){var n=addEnquiries($('enqIn').value);if(n)$('enqIn').value=''});
 $('enqClip').addEventListener('click',function(){
