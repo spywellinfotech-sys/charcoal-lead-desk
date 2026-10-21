@@ -119,6 +119,11 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
 .sec{text-transform:none;letter-spacing:0;font-weight:700;font-size:13px}
 .toast{border-radius:999px;background:var(--navy);color:#fff}
 .link{color:var(--ember)}
+
+.finder{border:1px dashed #9CC4F0;background:var(--ember-soft);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.finder-in{display:flex;gap:8px;flex-wrap:wrap}
+.finder-in input{flex:1;min-width:150px}
+.bar{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.bar .q{grid-column:1/-1}
 </style>
 </head><body>
 
@@ -154,6 +159,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <input class="q" id="q" type="search" placeholder="Company, city ya person dhundho" aria-label="Search">
     <select id="fCat" aria-label="Category"><option value="">Sab category</option><option value="recycler">Recyclers</option><option value="dealer">Charcoal Dealers</option><option value="carbide">Carbide Manufacturers</option></select>
     <select id="fState" aria-label="State"><option value="">Sab states</option></select>
+    <select id="fContact" aria-label="Contact"><option value="">Sab contact</option><option value="nophone">Number nahi hai</option><option value="hasphone">Number hai</option><option value="noemail">Email nahi hai</option><option value="due">Follow-up due</option></select>
     <select id="fStatus" aria-label="Status"><option value="">Sab status</option></select>
     <select id="fSort" aria-label="Sort">
       <option value="cap">Capacity: zyada pehle</option>
@@ -318,6 +324,11 @@ function filtered(){
   var q=$('q').value.trim().toLowerCase(),fs=$('fState').value,ft=$('fStatus').value,so=$('fSort').value;
   var r=leads.filter(function(l){
     if(fs&&l.state!==fs)return false;
+    var ct=$('fContact').value;
+    if(ct==='nophone'&&digits(l.phone).length>=10)return false;
+    if(ct==='hasphone'&&digits(l.phone).length<10)return false;
+    if(ct==='noemail'&&l.email)return false;
+    if(ct==='due'&&!(l.nextFollowUp&&l.nextFollowUp<=today()&&l.status!=='Won'&&l.status!=='Lost'))return false;
     var fc=$('fCat').value;if(fc&&(l.cat||'recycler')!==fc)return false;
     if(ft&&(l.status||'New')!==ft)return false;
     if(q&&[l.name,l.city,l.state,l.person].join(' ').toLowerCase().indexOf(q)<0)return false;
@@ -344,6 +355,16 @@ function contactBox(kind,l){
   var g='https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(l.email)+'&su='+subj+'&body='+body;
   return'<div class="cbox"><code>'+esc(l.email)+'</code><div class="cbox-btns"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener" data-log="'+esc(l.id)+'">Gmail</a><a class="btn" href="mailto:'+esc(l.email)+'?subject='+subj+'&body='+body+'">Mail app</a><button class="btn" type="button" data-copy="'+esc(l.email)+'">Copy</button></div></div>';
 }
+function finder(l){
+  var hp=digits(l.phone).length>=10,he=!!l.email;if(hp&&he)return'';
+  var place=[l.name,l.city,l.state].filter(Boolean).join(' ');
+  var g='https://www.google.com/search?q='+encodeURIComponent(place+(hp?' email':' contact number email'));
+  var m='https://www.google.com/maps/search/'+encodeURIComponent(place);
+  var li='https://www.google.com/search?q='+encodeURIComponent(place+' site:linkedin.com OR site:indiamart.com OR site:justdial.com');
+  return'<div class="finder"><div class="sec">Contact details nahi hain? Web par dhoondo</div>'+
+   '<div class="row-actions"><a class="btn primary" href="'+g+'" target="_blank" rel="noopener">Search on Google</a><a class="btn" href="'+m+'" target="_blank" rel="noopener">Google Maps</a><a class="btn" href="'+li+'" target="_blank" rel="noopener">IndiaMART / JustDial</a></div>'+
+   '<div class="finder-in">'+(hp?'':'<input class="qp" inputmode="tel" placeholder="Number mila? yahan daalo" aria-label="Number">')+(he?'':'<input class="qe" type="email" placeholder="Email mila? yahan daalo" aria-label="Email">')+'<button class="btn" type="button" data-qsave="'+esc(l.id)+'">Save</button></div></div>';
+}
 function render(){
   stateOptions();renderStats();renderCall();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
@@ -357,7 +378,7 @@ function render(){
      '<span class="pill" style="--pill-bg:var('+st.bg+');--pill-fg:var('+st.fg+')">'+st.l+'</span></div>'+
      '<div class="cap"><div class="cap-line"><span>'+(cap?fmt(cap)+' t/yr':'Capacity pata nahi')+'</span><span>'+(cap?'~'+fmt(Math.round(cap/12))+' t/mahina':'')+'</span></div>'+
      '<div class="track"><div class="fill" style="width:'+(cap?Math.max(2,cap/max*100):0)+'%"></div></div>'+(l.capNote?'<div class="note">Source: '+esc(l.capNote)+'</div>':'')+'</div>'+
-     '<div class="contact">'+contactBox('call',l)+contactBox('wa',l)+contactBox('mail',l)+'</div>'+
+     '<div class="contact">'+contactBox('call',l)+contactBox('wa',l)+contactBox('mail',l)+'</div>'+finder(l)+
      (l.notes?'<div class="note">'+esc(l.notes)+'</div>':'')+
      '<div class="lead-foot"><select data-status="'+esc(l.id)+'" aria-label="Status">'+opts+'</select>'+
      '<button class="btn" type="button" data-logbtn="'+esc(l.id)+'">Aaj contact kiya</button>'+
@@ -410,9 +431,14 @@ $('btnExport').onclick=function(){
 
 /* list actions */
 $('list').addEventListener('click',function(e){
-  var t=e.target.closest('[data-copy],[data-copy-msg],[data-edit],[data-del],[data-logbtn],[data-log],[data-more]');if(!t)return;if(t.dataset.more){shown+=100;render();return}
+  var t=e.target.closest('[data-copy],[data-copy-msg],[data-edit],[data-del],[data-logbtn],[data-log],[data-more],[data-qsave]');if(!t)return;if(t.dataset.more){shown+=100;render();return}
   if(t.dataset.copy){copy(t.dataset.copy)}
   else if(t.dataset.copyMsg){var l=find(t.dataset.copyMsg);if(l)copy(fill(tpl('msg',l),l))}
+  else if(t.dataset.qsave){var card=t.closest('.lead'),qp=card.querySelector('.qp'),qe=card.querySelector('.qe'),patch={};
+    if(qp&&qp.value.trim()){if(digits(qp.value).length<10){toast('Sahi number daalo');return}patch.phone=qp.value.trim()}
+    if(qe&&qe.value.trim()){if(!/^\S+@\S+\.\S+$/.test(qe.value.trim())){toast('Sahi email daalo');return}patch.email=qe.value.trim()}
+    if(!patch.phone&&!patch.email){toast('Pehle number ya email daalo');return}
+    update(t.dataset.qsave,patch);toast('Save ho gaya')}
   else if(t.dataset.edit){var l2=find(t.dataset.edit);if(l2)openForm(l2)}
   else if(t.dataset.del){
     if(t.dataset.arm===t.dataset.del){store.del(t.dataset.del)}else{t.dataset.arm=t.dataset.del;t.textContent='Pakka delete?';setTimeout(function(){if(t.isConnected){t.textContent='Delete';delete t.dataset.arm}},3000)}}
@@ -422,7 +448,7 @@ $('list').addEventListener('change',function(e){var s=e.target.closest('[data-st
 
 /* filters + settings */
 STATUSES.forEach(function(s){var o=document.createElement('option');o.value=s.k;o.textContent=s.l;$('fStatus').appendChild(o)});
-['q','fCat','fState','fStatus','fSort'].forEach(function(id){$(id).addEventListener('input',function(){shown=100;render()})});
+['q','fContact','fCat','fState','fStatus','fSort'].forEach(function(id){$(id).addEventListener('input',function(){shown=100;render()})});
 var map={sMe:'me',sBrand:'brand',sPhone:'phone',sSubject:'subject',sMsg:'msg',sScript:'script',sCMsg:'cmsg',sCScript:'cscript',sDMsg:'dmsg',sDScript:'dscript'};
 Object.keys(map).forEach(function(id){
   $(id).value=settings[map[id]]||'';
