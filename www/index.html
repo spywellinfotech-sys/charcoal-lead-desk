@@ -69,7 +69,11 @@ details.panel>summary{cursor:pointer;font:600 20px/1.1 var(--f-display);letter-s
 .tabs{display:flex;border:1px solid var(--line);align-self:flex-start;background:var(--surface)}
 .tab{border:0;background:none;padding:9px 18px;font:600 18px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
-body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="enq"] .catTabs{display:none}
+body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="day"] .lv,body[data-view="ord"] .lv,body[data-view="enq"] .catTabs,body[data-view="day"] .catTabs,body[data-view="ord"] .catTabs{display:none}
+.xv{display:none;flex-direction:column;gap:12px}
+body[data-view="day"] #viewDay,body[data-view="ord"] #viewOrd{display:flex}
+.tabs{overflow-x:auto;max-width:100%}
+.tab{white-space:nowrap;padding:9px 13px}
 .ev{display:none;flex-direction:column;gap:12px}
 body[data-view="enq"] .ev{display:flex}
 .ev textarea{min-height:110px;width:100%}
@@ -153,6 +157,8 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <button class="tab" role="tab" data-view="leads" aria-selected="true" type="button">Leads</button>
     <button class="tab" role="tab" data-view="call" aria-selected="false" type="button">Telecalling</button>
     <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
+    <button class="tab" role="tab" data-view="day" aria-selected="false" type="button" id="tabDay">Aaj</button>
+    <button class="tab" role="tab" data-view="ord" aria-selected="false" type="button" id="tabOrd">Orders</button>
   </nav>
 
   <div class="catTabs" id="catTabs" role="tablist" aria-label="Category"></div>
@@ -185,6 +191,62 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <div id="enqStats" class="stats"></div>
     <div id="enqNext"></div>
     <div id="enqList" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <section class="xv" id="viewDay">
+    <div class="panel">
+      <h2>Aaj ka plan</h2>
+      <label>Roz ka call target<input id="dayTarget" type="number" min="5" max="200" inputmode="numeric"></label>
+      <div id="dayProg"></div>
+    </div>
+    <div id="dayList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="panel"><h2>Report</h2><div id="repBody"></div></div>
+  </section>
+
+  <section class="xv" id="viewOrd">
+    <div id="ordStats" class="stats"></div>
+    <div class="panel">
+      <h2>Naya order</h2>
+      <div class="grid2">
+        <label>Party<input id="oParty" list="oPartyList" placeholder="Company ka naam"></label>
+        <label>Product<input id="oProduct" value="Wood charcoal"></label>
+        <label>Quantity (ton)<input id="oQty" type="number" step="any" inputmode="decimal"></label>
+        <label>Rate (Rs / ton)<input id="oRate" type="number" step="any" inputmode="decimal"></label>
+        <label>GST %<input id="oGst" type="number" step="any" value="5" inputmode="decimal"></label>
+        <label>Order date<input id="oDate" type="date"></label>
+        <label>Payment due date<input id="oDue" type="date"></label>
+        <label>Mila hua payment (Rs)<input id="oPaid" type="number" step="any" value="0" inputmode="decimal"></label>
+      </div>
+      <label>Note<input id="oNote"></label>
+      <div class="row-actions"><button class="btn primary" id="oAdd" type="button">Order save karo</button></div>
+    </div>
+    <div id="ordList" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="panel">
+      <h2>Quotation banao</h2>
+      <div class="grid2">
+        <label>Party<input id="qParty" list="oPartyList"></label>
+        <label>Unka WhatsApp number<input id="qPhone" inputmode="tel"></label>
+        <label>Unka email<input id="qEmail" type="email"></label>
+        <label>Product<input id="qProduct" value="Wood charcoal"></label>
+        <label>Quantity (ton)<input id="qQty" type="number" step="any" inputmode="decimal"></label>
+        <label>Rate (Rs / ton)<input id="qRate" type="number" step="any" inputmode="decimal"></label>
+        <label>GST %<input id="qGst" type="number" step="any" value="5" inputmode="decimal"></label>
+        <label>Valid (din)<input id="qDays" type="number" value="7" inputmode="numeric"></label>
+      </div>
+      <label>Terms<textarea id="qTerms" style="min-height:90px">Payment: delivery se pehle / advance.
+Delivery: transport extra, ex-works.
+Rate sirf validity tak mananiye.</textarea></label>
+      <div class="row-actions"><button class="btn primary" id="qMake" type="button">Quotation banao</button></div>
+      <textarea id="qOut" style="min-height:220px" placeholder="Quotation yahan aayegi. Bhejne se pehle edit kar sakte ho."></textarea>
+      <div class="row-actions">
+        <a class="btn" id="qWa" target="_blank" rel="noopener" href="#">WhatsApp</a>
+        <a class="btn" id="qMail" href="#">Email</a>
+        <button class="btn" id="qCopy" type="button">Copy</button>
+        <button class="btn" id="qPrint" type="button">Print / PDF</button>
+        <button class="btn" id="qToOrd" type="button">Order me badlo</button>
+      </div>
+    </div>
+    <datalist id="oPartyList"></datalist>
   </section>
 
   <section class="stats lv" id="stats" aria-label="Summary"></section>
@@ -253,6 +315,18 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
       <button class="btn" id="btnImportCancel" type="button">Band karo</button>
     </div>
   </section>
+
+  <details class="panel" id="backupBox">
+    <summary>Backup aur Restore</summary>
+    <p class="hint">Saari leads, orders aur settings ek file me. Phone badalne ya app uninstall karne se pehle backup le lo. <span id="bkInfo"></span></p>
+    <div class="row-actions">
+      <button class="btn primary" id="bkSave" type="button">Backup lo (file)</button>
+      <button class="btn" id="bkCopy" type="button">Backup copy</button>
+      <label class="btn" style="cursor:pointer;flex-direction:row;align-items:center">Restore (file)<input id="bkFile" type="file" accept=".json,application/json" style="display:none"></label>
+    </div>
+    <textarea id="bkText" placeholder="Ya backup text yahan paste karke Restore dabao" style="min-height:70px"></textarea>
+    <div class="row-actions"><button class="btn" id="bkRestore" type="button">Paste se restore</button></div>
+  </details>
 
   <details class="panel" id="pitch">
     <summary>Mera pitch message</summary>
@@ -465,7 +539,7 @@ function renderCats(){
   Object.keys(LOAD).forEach(function(k){var b=$(LOAD[k]);if(b)b.hidden=!!cur0&&cur0!==k});
 }
 function render(){renderCats();
-  stateOptions();renderStats();renderCall();renderEnq();
+  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
@@ -935,6 +1009,124 @@ $('viewEnq').addEventListener('click',function(e){
   if(a.dataset.edone){var id=a.dataset.edone,k=a.dataset.ek;setTimeout(function(){enqDone(id,k)},300)}
   else if(a.dataset.eskip){var l=find(a.dataset.eskip);enqSkip[a.dataset.eskip]=1;renderEnq()}
 });
+
+
+/* ---- Aaj plan, reports, orders, quotation, backup ---- */
+var orders=[];try{orders=JSON.parse(localStorage.getItem('cld-orders'))||[]}catch(e){}
+function saveOrders(){persist('cld-orders',orders)}
+function inr(n){return 'Rs '+Math.round(Number(n)||0).toLocaleString('en-IN')}
+function waFor(l){return l.cat==='inbound'?enqLinks(l).wa:'https://wa.me/'+digits(l.phone)+'?text='+encodeURIComponent(fill(tpl('msg',l),l))}
+function dayCalls(){var t=today(),n=0;leads.forEach(function(l){(l.calls||[]).forEach(function(c){if(c.t&&dayOf(c.t)===t)n++})});return n}
+function buildPlan(){
+  var t=today(),target=Number(settings.dayTarget)||20,items=[],seen={};
+  function push(l,why){if(seen[l.id]||items.length>=target)return;seen[l.id]=1;items.push({l:l,why:why})}
+  leads.filter(function(l){return l.cat==='inbound'&&!l.repliedAt&&isOpen(l)}).sort(function(a,b){return (a.enqAt||0)-(b.enqAt||0)}).forEach(function(l){push(l,'TradeIndia enquiry: reply baaki')});
+  leads.filter(function(l){return isOpen(l)&&l.nextFollowUp&&l.nextFollowUp<=t&&(l.cat!=='inbound'||l.repliedAt)&&!(l.lastContact===t&&l.nextFollowUp>t)}).sort(function(a,b){return a.nextFollowUp.localeCompare(b.nextFollowUp)}).forEach(function(l){push(l,'Follow-up due ('+l.nextFollowUp+')')});
+  leads.filter(function(l){return isOpen(l)&&hasPhone(l)&&(!l.status||l.status==='New')&&!(l.calls&&l.calls.length)&&!l.lastContact&&l.cat!=='inbound'}).sort(function(a,b){return (b.email?1:0)-(a.email?1:0)||(Number(b.capacity)||0)-(Number(a.capacity)||0)}).forEach(function(l){push(l,'Naya lead, number hai')});
+  return items;
+}
+function bar(label,n,max,col){return '<div style="display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0"><span style="width:110px;flex:none">'+esc(label)+'</span><div style="flex:1;background:var(--bg);height:10px;border-radius:5px"><div style="width:'+(max?Math.max(n?3:0,n/max*100):0)+'%;height:10px;border-radius:5px;background:'+(col||'var(--ember)')+'"></div></div><b style="width:36px;text-align:right">'+n+'</b></div>'}
+function renderDay(){
+  if(document.body.dataset.view!=='day')return;
+  var tg=$('dayTarget');if(tg&&document.activeElement!==tg)tg.value=Number(settings.dayTarget)||20;
+  var plan=buildPlan(),done=dayCalls(),target=Number(settings.dayTarget)||20;
+  $('dayProg').innerHTML=bar('Aaj ho gaye',done,target,'#16a34a')+'<p class="hint">'+done+' / '+target+' contact. Neeche ki list me aaj ke sabse zaroori '+plan.length+' log hain.</p>';
+  $('dayList').innerHTML=plan.length?plan.map(function(x){var l=x.l,d=digits(l.phone);
+    return '<div class="cbrow" style="flex-wrap:wrap;gap:8px"><span style="flex:1;min-width:150px"><b>'+esc(l.name)+'</b><br><span class="meta">'+esc([l.city,l.state].filter(Boolean).join(', '))+' · '+esc(x.why)+'</span></span><span class="ebtns" style="margin:0">'+(d?'<a class="btn primary" href="tel:+'+d+'" data-dlog="'+esc(l.id)+'">Call</a><a class="btn" target="_blank" rel="noopener" href="'+waFor(l)+'" data-dlog="'+esc(l.id)+'">WhatsApp</a>':'')+(l.email?'<a class="btn" href="mailto:'+esc(l.email)+'?subject='+encodeURIComponent(fill(l.cat==='inbound'?settings.esubj:settings.subject,l))+'&body='+encodeURIComponent(fill(tpl('msg',l),l)+sig())+'" data-dlog="'+esc(l.id)+'">Email</a>':'')+'</span></div>'}).join(''):'<div class="empty">Aaj ke liye koi kaam nahi bacha. Leads me number bharo ya naye lead load karo.</div>';
+  // report
+  var by={};STATUSES.forEach(function(s){by[s.k]=0});leads.forEach(function(l){by[l.status||'New']=(by[l.status||'New']||0)+1});
+  var mx=Math.max.apply(null,Object.keys(by).map(function(k){return by[k]}).concat([1]));
+  var h='<h3 style="margin:4px 0">Status</h3>'+STATUSES.map(function(s){return bar(s.l,by[s.k]||0,mx)}).join('');
+  var cats={};leads.forEach(function(l){var c=l.cat||'recycler';var o=cats[c]||(cats[c]={n:0,p:0,c:0,w:0});o.n++;if(hasPhone(l))o.p++;if(l.status&&l.status!=='New')o.c++;if(l.status==='Won')o.w++});
+  var nm={};CATS.forEach(function(c){nm[c[0]]=c[1]});
+  h+='<h3 style="margin:14px 0 4px">Category</h3><div style="overflow-x:auto"><table style="width:100%;font-size:13px;border-collapse:collapse"><tr style="text-align:left"><th>Category</th><th>Total</th><th>Number</th><th>Contact hue</th><th>Order</th></tr>'+Object.keys(cats).map(function(c){var o=cats[c];return'<tr style="border-top:1px solid var(--line)"><td>'+esc(nm[c]||c)+'</td><td>'+o.n+'</td><td>'+o.p+'</td><td>'+o.c+'</td><td>'+o.w+'</td></tr>'}).join('')+'</table></div>';
+  var days=[],i;for(i=6;i>=0;i--){var dd=addDays(-i),n=0;leads.forEach(function(l){(l.calls||[]).forEach(function(c){if(c.t&&dayOf(c.t)===dd)n++})});days.push([dd.slice(5),n])}
+  var m2=Math.max.apply(null,days.map(function(x){return x[1]}).concat([1]));
+  h+='<h3 style="margin:14px 0 4px">Pichhle 7 din ke contact</h3>'+days.map(function(x){return bar(x[0],x[1],m2,'#1565c0')}).join('');
+  var enq=enqLeads(),e7=enq.filter(function(l){return l.enqAt>Date.now()-7*864e5}).length;
+  h+='<p class="hint" style="margin-top:12px">TradeIndia enquiry (7 din): '+e7+' · Total: '+enq.length+' · Reply hue: '+enq.filter(function(l){return l.repliedAt}).length+'</p>';
+  var st={};leads.forEach(function(l){if((l.status==='Won'||l.status==='Interested'||l.status==='Sample')&&l.state)st[l.state]=(st[l.state]||0)+1});
+  var top=Object.keys(st).sort(function(a,b){return st[b]-st[a]}).slice(0,6);
+  if(top.length)h+='<h3 style="margin:14px 0 4px">Interested/Sample/Order wale states</h3>'+top.map(function(k){return bar(k,st[k],st[top[0]],'#0ea5e9')}).join('');
+  $('repBody').innerHTML=h;
+}
+/* orders */
+function ordTotal(o){var a=(Number(o.qty)||0)*(Number(o.rate)||0);return a+a*(Number(o.gst)||0)/100}
+function renderOrd(){
+  if(document.body.dataset.view!=='ord')return;
+  var names={};leads.forEach(function(l){if(l.name)names[l.name]=1});
+  $('oPartyList').innerHTML=Object.keys(names).sort().slice(0,1500).map(function(n){return'<option value="'+esc(n)+'">'}).join('');
+  var t=today(),mo=t.slice(0,7),tot=0,paid=0,out=0,msales=0;
+  orders.forEach(function(o){var a=ordTotal(o);tot+=a;paid+=Number(o.paid)||0;out+=Math.max(0,a-(Number(o.paid)||0));if((o.date||'').slice(0,7)===mo)msales+=a});
+  $('ordStats').innerHTML='<div class="stat"><b>'+orders.length+'</b><span>Orders</span></div><div class="stat"><b>'+inr(tot)+'</b><span>Total sale</span></div><div class="stat"><b>'+inr(paid)+'</b><span>Mila</span></div><div class="stat"><b style="color:#b91c1c">'+inr(out)+'</b><span>Baaki payment</span></div><div class="stat"><b>'+inr(msales)+'</b><span>Is mahine</span></div>';
+  $('ordList').innerHTML=orders.length?orders.slice().sort(function(a,b){return String(b.date||'').localeCompare(String(a.date||''))}).map(function(o){
+    var a=ordTotal(o),bal=a-(Number(o.paid)||0),late=bal>0&&o.due&&o.due<t;
+    return '<article class="lead"><div class="lead-head"><div><div class="name">'+esc(o.party)+'</div><div class="meta">'+esc(o.product)+' · '+fmt(o.qty)+' ton @ '+inr(o.rate)+' + GST '+(o.gst||0)+'% · '+esc(o.date||'')+'</div></div><select data-ost="'+esc(o.id)+'" style="width:auto">'+['Order','Dispatched','Delivered'].map(function(s){return'<option'+(s===(o.status||'Order')?' selected':'')+'>'+s+'</option>'}).join('')+'</select></div>'+
+     '<div class="ereq">Total '+inr(a)+' · Mila '+inr(o.paid)+' · <b style="color:'+(bal>0?'#b91c1c':'#16a34a')+'">'+(bal>0?'Baaki '+inr(bal):'Poora mil gaya')+'</b>'+(o.due&&bal>0?' · due '+esc(o.due)+(late?' (late)':''):'')+'</div>'+(o.note?'<div class="note">'+esc(o.note)+'</div>':'')+
+     '<div class="ebtns"><input type="number" inputmode="decimal" placeholder="Payment mila (Rs)" data-opay-in="'+esc(o.id)+'" style="width:160px"><button class="btn primary" type="button" data-opay="'+esc(o.id)+'">Payment jodo</button><button class="btn" type="button" data-odel="'+esc(o.id)+'">Delete</button></div></article>'}).join(''):'<div class="empty">Abhi koi order nahi. Upar se naya order jodo ya quotation se order banao.</div>';
+}
+$('oDate').value=today();
+$('oAdd').addEventListener('click',function(){
+  var p=val('oParty').trim(),q=Number(val('oQty')),r=Number(val('oRate'));
+  if(!p||!(q>0)||!(r>0)){toast('Party, quantity aur rate daalo');return}
+  var lead=leads.find(function(l){return l.name===p});
+  orders.push({id:newId(),party:p,leadId:lead?lead.id:'',product:val('oProduct'),qty:q,rate:r,gst:Number(val('oGst'))||0,date:val('oDate')||today(),due:val('oDue'),paid:Number(val('oPaid'))||0,note:val('oNote'),status:'Order'});
+  saveOrders();if(lead&&lead.status!=='Won')update(lead.id,{status:'Won',nextFollowUp:''});
+  ['oParty','oQty','oRate','oDue','oNote'].forEach(function(i){$(i).value=''});$('oPaid').value='0';toast('Order save ho gaya');renderOrd();
+});
+$('viewOrd').addEventListener('click',function(e){
+  var b=e.target.closest('[data-opay],[data-odel]');if(!b)return;
+  if(b.dataset.opay){var id=b.dataset.opay,inp=document.querySelector('[data-opay-in="'+id+'"]'),v=Number(inp&&inp.value);if(!(v>0)){toast('Amount daalo');return}var o=orders.find(function(x){return x.id===id});if(o){o.paid=(Number(o.paid)||0)+v;saveOrders();renderOrd()}}
+  else if(b.dataset.odel&&confirm('Ye order delete karna hai?')){orders=orders.filter(function(x){return x.id!==b.dataset.odel});saveOrders();renderOrd()}
+});
+$('viewOrd').addEventListener('change',function(e){var s=e.target.closest('[data-ost]');if(!s)return;var o=orders.find(function(x){return x.id===s.dataset.ost});if(o){o.status=s.value;saveOrders()}});
+/* quotation */
+$('qParty').addEventListener('change',function(){var l=leads.find(function(x){return x.name===val('qParty')});if(l){if(l.phone)$('qPhone').value=l.phone;if(l.email)$('qEmail').value=l.email}});
+function quoteText(){
+  var s=settings,q=Number(val('qQty'))||0,r=Number(val('qRate'))||0,g=Number(val('qGst'))||0,a=q*r,ga=a*g/100,d=new Date(),v=new Date(Date.now()+(Number(val('qDays'))||7)*864e5);
+  return (s.brand||'')+'\n'+(s.gstin?'GSTIN: '+s.gstin+'\n':'')+(s.phone?'Mobile/WhatsApp: +91 '+s.phone+'\n':'')+(s.email?'Email: '+s.email+'\n':'')+(s.web?'Web: '+s.web+'\n':'')+
+   '\nQUOTATION\nDate: '+ymd(d)+'   Valid till: '+ymd(v)+'\nTo: '+(val('qParty')||'')+'\n\n'+val('qProduct')+'\nQuantity: '+q+' ton\nRate: '+inr(r)+' / ton\nAmount: '+inr(a)+'\nGST @'+g+'%: '+inr(ga)+'\nTOTAL: '+inr(a+ga)+'\n\nTerms:\n'+val('qTerms')+'\n\nDhanyavaad,\n'+(s.me?s.me+'\n':'')+(s.brand||'');
+}
+function syncQ(){var t=val('qOut'),d=digits(val('qPhone'));$('qWa').href=d?'https://wa.me/'+d+'?text='+encodeURIComponent(t):'#';var em=val('qEmail');$('qMail').href=em?'mailto:'+em+'?subject='+encodeURIComponent('Quotation - '+(settings.brand||''))+'&body='+encodeURIComponent(t):'#'}
+$('qMake').addEventListener('click',function(){if(!(Number(val('qQty'))>0)||!(Number(val('qRate'))>0)){toast('Quantity aur rate daalo');return}$('qOut').value=quoteText();syncQ()});
+['qOut','qPhone','qEmail'].forEach(function(i){$(i).addEventListener('input',syncQ)});
+$('qCopy').addEventListener('click',function(){if($('qOut').value)copy($('qOut').value)});
+$('qPrint').addEventListener('click',function(){
+  var t=val('qOut');if(!t){toast('Pehle quotation banao');return}
+  var w=window.open('','_blank');if(!w){toast('Print nahi khula. Copy karke bhejo');return}
+  w.document.write('<html><head><title>Quotation</title></head><body style="font:15px Calibri,Carlito,Arial;padding:28px;white-space:pre-wrap;line-height:1.5">'+esc(t)+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},300);
+});
+$('qToOrd').addEventListener('click',function(){$('oParty').value=val('qParty');$('oProduct').value=val('qProduct');$('oQty').value=val('qQty');$('oRate').value=val('qRate');$('oGst').value=val('qGst');$('oParty').scrollIntoView({behavior:'smooth',block:'center'});toast('Upar order form me bhar diya')});
+/* plan clicks */
+$('dayTarget').addEventListener('input',function(){settings.dayTarget=Number(this.value)||20;persist('cld-settings',settings);renderDay()});
+$('viewDay').addEventListener('click',function(e){
+  var a=e.target.closest('[data-dlog]');if(!a)return;var l=find(a.dataset.dlog);if(!l)return;
+  setTimeout(function(){if(l.cat==='inbound'){enqDone(l.id,l.repliedAt?'fu':'reply')}else{var now=Date.now();update(l.id,{calls:(l.calls||[]).concat([{t:now,o:'plan'}]).slice(-15),lastCall:now,lastContact:today(),status:(!l.status||l.status==='New')?'Contacted':l.status,nextFollowUp:(l.nextFollowUp&&l.nextFollowUp>today())?l.nextFollowUp:addDays(2)})}},300);
+});
+/* backup */
+function bkData(){return JSON.stringify({app:'shyla',v:1,at:new Date().toISOString(),leads:leads,orders:orders,settings:settings})}
+function bkInfo(){var t=localStorage.getItem('cld-lastbackup');$('bkInfo').textContent=t?'Aakhri backup: '+t.slice(0,10):'Abhi tak backup nahi liya.'}
+$('bkSave').addEventListener('click',function(){
+  var name='shyla-backup-'+today()+'.json',txt=bkData(),C=window.Capacitor,P=C&&C.Plugins;
+  function done(){try{localStorage.setItem('cld-lastbackup',new Date().toISOString())}catch(e){}bkInfo();toast('Backup ho gaya')}
+  function dl(){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();done()}
+  if(P&&P.Filesystem&&P.Share){P.Filesystem.writeFile({path:name,data:txt,directory:'CACHE',encoding:'utf8'}).then(function(r){return P.Share.share({title:name,url:r.uri,dialogTitle:'Backup Drive/WhatsApp par save karo'})}).then(done,function(){copy(txt);toast('File nahi bani, text copy ho gaya. Kahin paste karke rakh lo')})}
+  else{try{dl()}catch(e){copy(txt)}}
+});
+$('bkCopy').addEventListener('click',function(){copy(bkData());try{localStorage.setItem('cld-lastbackup',new Date().toISOString())}catch(e){}bkInfo()});
+function restore(txt){
+  var d;try{d=JSON.parse(txt)}catch(e){toast('Ye backup file sahi nahi hai');return}
+  if(!d||!Array.isArray(d.leads)){toast('Backup me leads nahi mile');return}
+  var n=0,i=0,list=d.leads;
+  if(Array.isArray(d.orders)){var ids={};orders.forEach(function(o){ids[o.id]=1});d.orders.forEach(function(o){if(o&&o.id&&!ids[o.id])orders.push(o)});saveOrders()}
+  if(d.settings&&typeof d.settings==='object'){Object.keys(d.settings).forEach(function(k){if(d.settings[k]!==''&&d.settings[k]!=null)settings[k]=d.settings[k]});persist('cld-settings',settings)}
+  (function step(){if(i>=list.length){toast(n+' leads wapas aaye');render();return}
+    var chunk=list.slice(i,i+10);i+=10;
+    Promise.all(chunk.map(function(l){if(!l||!l.id)return;n++;return store.save(l).catch(function(){})})).then(function(){$('bkInfo').textContent='Restore: '+Math.min(i,list.length)+' / '+list.length;setTimeout(step,100)})})();
+}
+$('bkFile').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){restore(String(r.result))};r.readAsText(f);this.value=''});
+$('bkRestore').addEventListener('click',function(){var t=val('bkText').trim();if(!t){toast('Backup text paste karo');return}restore(t)});
+bkInfo();
 
 /* start */
 function start(s){store=s;$('storeNote').textContent=s.kind==='db'?'Shared save: sab devices par':'Save: sirf is browser me';var tm=null;s.sub(function(a){leads=a;clearTimeout(tm);tm=setTimeout(render,a.length>60?250:0)})}
