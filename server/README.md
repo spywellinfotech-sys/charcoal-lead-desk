@@ -17,3 +17,8 @@
 
 Dhyan do: pehle 2-3 asli enquiry se parse sahi hai ya nahi check karo. Template ka format alag ho to
 `parse_` ke labels badalne padenge.
+
+## Asli TradeIndia email ka format (dekha gaya)
+Sender: inquiry.paid@rfis.tradeindia.com, subject "Looking for suppliers of <product>". Body me Sender Name, Product Details,
+Company Name, Mobile aur city/state hote hain, **buyer ka email nahi hota**. Isliye email auto-reply TradeIndia enquiry par nahi ja sakta.
+Reply ke raaste: WhatsApp (app ka button, ya Meta WhatsApp API ke baad apne aap) ya call. Script phir bhi enquiry ko Sheet me daalti hai aur app me sync hoti hai.

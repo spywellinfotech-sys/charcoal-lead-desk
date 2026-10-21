@@ -17,7 +17,7 @@ var CFG = {
   WEB: 'www.gangastone.com',
   // Gmail search: TradeIndia ke emails. Zarurat ho to badlo.
   // TradeIndia + IndiaMART ke enquiry emails. Sender alag dikhe to yahan badlo.
-  QUERY: '(from:tradeindia.com OR from:indiamart.com OR from:indiamart.in) is:unread newer_than:2d',
+  QUERY: '(from:inquiry.paid@rfis.tradeindia.com OR from:indiamart.com OR from:indiamart.in) is:unread newer_than:2d',
   LABEL: 'shyla-done',
   AUTO_EMAIL: true,
   // WhatsApp Cloud API (optional). Meta Business me approved template chahiye.
@@ -47,16 +47,16 @@ function lab_(b, keys) {
 }
 
 function parse_(body) {
-  var b = String(body).replace(/\r/g, '');
-  var ph = (b.match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/) || [''])[0].replace(/[^\d]/g, '');
+  var b = String(body).replace(/\r/g, '').replace(/\s*\*?\s*\b(Sender Name|Product Details|Requirement Details|Company Name|Mobile|Country|Buyer Details|city|state)\b\s*([:\-])/gi, '\n$1$2');
+  var ph = (b.replace(/9355059508/g, '').match(/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/) || [''])[0].replace(/[^\d]/g, '');
   if (ph.length > 10) ph = ph.slice(-10);
   var ems = (b.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) || []).filter(function (e) { return !/tradeindia|indiamart|noreply|no-reply|shyla|turbancorpn/i.test(e); });
-  var req = lab_(b, 'requirement|product|looking for|message|enquiry for|inquiry for|description|details|subject');
+  var req = lab_(b, 'product details|requirement|product|looking for|message|enquiry for|inquiry for|description|details|subject');
   var qty = lab_(b, 'quantity|qty|order quantity');
   if (qty && req.toLowerCase().indexOf(qty.toLowerCase()) < 0) req = (req ? req + ' - ' : '') + qty;
   return {
     phone: ph, email: ems[0] || '',
-    person: lab_(b, 'name|buyer name|buyer|contact person|person|full name'),
+    person: lab_(b, 'sender name|name|buyer name|buyer|contact person|person|full name'),
     company: lab_(b, 'company|company name|organi[sz]ation|firm'),
     city: lab_(b, 'city|location'), state: lab_(b, 'state'), req: req
   };

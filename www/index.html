@@ -982,13 +982,15 @@ function enqLeads(){return leads.filter(function(l){return l.cat==='inbound'})}
 function ago(ms){if(!ms)return '';var m=Math.max(0,Math.round((Date.now()-ms)/60000));if(m<60)return m+' min pehle';var h=Math.round(m/60);if(h<24)return h+' ghante pehle';return Math.round(h/24)+' din pehle'}
 var PH=/(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}\b/,EM=/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
 function lab(b,keys){var re=new RegExp('(?:^|\\n)\\s*(?:'+keys+')\\s*[:\\-]\\s*([^\\n]+)','i'),m=b.match(re);return m?m[1].trim():''}
+function normEnq(b){return String(b).replace(/\r/g,'').replace(/\s*\*?\s*\b(Sender Name|Product Details|Requirement Details|Company Name|Mobile|Country|Buyer Details|city|state)\b\s*([:\-])/gi,'\n$1$2')}
 function parseBlock(b){
-  var ph=(b.match(PH)||[''])[0].replace(/[^\d+]/g,'');if(ph.length>10)ph=ph.slice(-10);
+  b=normEnq(b);
+  var ph=((b.replace(/9355059508/g,'').match(PH))||[''])[0].replace(/[^\d+]/g,'');if(ph.length>10)ph=ph.slice(-10);
   var ems=(b.match(EM)||[]).filter(function(e){return !/tradeindia|noreply|no-reply/i.test(e)});
-  var person=lab(b,'name|buyer name|buyer|contact person|person|full name');
+  var person=lab(b,'sender name|name|buyer name|buyer|contact person|person|full name');
   var company=lab(b,'company|company name|organi[sz]ation|firm');
   var city=lab(b,'city|location'),state=lab(b,'state');
-  var req=lab(b,'requirement|product|looking for|looking to buy|message|enquiry for|inquiry for|description|details|subject');
+  var req=lab(b,'product details|requirement|product|looking for|looking to buy|message|enquiry for|inquiry for|description|details|subject');
   var qty=lab(b,'quantity|qty|order quantity');
   if(qty&&req.toLowerCase().indexOf(qty.toLowerCase())<0)req=(req?req+' - ':'')+qty;
   if(!person&&!company){var first=b.split('\n').map(function(x){return x.trim()}).filter(function(x){return x&&x.length<=40&&!/\d{5}|@|:/.test(x)})[0];if(first)person=first}
