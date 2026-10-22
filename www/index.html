@@ -72,6 +72,10 @@ details.panel>summary{cursor:pointer;font:600 20px/1.1 var(--f-display);letter-s
 body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="day"] .lv,body[data-view="ord"] .lv,body[data-view="enq"] .catTabs,body[data-view="day"] .catTabs,body[data-view="ord"] .catTabs{display:none}
 .xv{display:none;flex-direction:column;gap:12px}
 body[data-view="day"] #viewDay,body[data-view="ord"] #viewOrd{display:flex}
+body[data-view="po"] .lv,body[data-view="po"] .catTabs{display:none}
+body[data-view="po"] #viewPo{display:flex}
+.poitem{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;align-items:end}
+@media(max-width:560px){.poitem{grid-template-columns:1fr 1fr}.poitem>:first-child{grid-column:1/3}}
 .tabs{overflow-x:auto;max-width:100%}
 .brandrow{display:flex;align-items:center;gap:12px}
 .brandrow h1{margin:0}
@@ -164,6 +168,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
     <button class="tab" role="tab" data-view="day" aria-selected="false" type="button" id="tabDay">Aaj</button>
     <button class="tab" role="tab" data-view="ord" aria-selected="false" type="button" id="tabOrd">Orders</button>
+    <button class="tab" role="tab" data-view="po" aria-selected="false" type="button" id="tabPo">Purchase</button>
     <button class="tab" role="tab" data-view="net" aria-selected="false" type="button" id="tabNet">Network</button>
   </nav>
 
@@ -208,6 +213,31 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     </div>
     <div id="dayList" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="panel"><h2>Report</h2><div id="repBody"></div></div>
+  </section>
+
+  <section class="xv" id="viewPo">
+    <div id="poStats" class="stats"></div>
+    <div class="panel">
+      <h2>Naya Purchase Order (supplier ko)</h2>
+      <div class="grid2">
+        <label>Supplier<input id="poSup" list="poSupList" placeholder="Supplier ka naam"></label>
+        <label>Supplier WhatsApp<input id="poPhone" inputmode="tel"></label>
+        <label>Supplier email<input id="poEmail" type="email"></label>
+        <label>PO date<input id="poDate" type="date"></label>
+        <label>Delivery tak (date)<input id="poDeliv" type="date"></label>
+        <label>GST %<input id="poGst" type="number" step="any" value="5" inputmode="decimal"></label>
+      </div>
+      <datalist id="poSupList"></datalist>
+      <h2 style="margin-top:12px">Items</h2>
+      <div id="poItems"></div>
+      <div class="row-actions"><button class="btn" id="poAddRow" type="button">+ Item jodo</button></div>
+      <label>Delivery address<textarea id="poAddr" style="min-height:60px" placeholder="Maal kahan bhejna hai"></textarea></label>
+      <label>Payment terms<input id="poTerms" value="50% advance, baaki delivery par"></label>
+      <label>Note<input id="poNote" placeholder="Quality / packing / transport"></label>
+      <div id="poTot" class="hint"></div>
+      <div class="row-actions"><button class="btn primary" id="poSave" type="button">PO save karo</button></div>
+    </div>
+    <div id="poList" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
   <section class="xv" id="viewOrd">
@@ -598,7 +628,7 @@ function renderCats(){
   $('btnAdd').textContent=net?'+ Naya contact':'+ Nayi company';
 }
 function render(){renderCats();
-  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();
+  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
@@ -1212,6 +1242,78 @@ $('viewOrd').addEventListener('click',function(e){
   else if(b.dataset.odel&&confirm('Ye order delete karna hai?')){orders=orders.filter(function(x){return x.id!==b.dataset.odel});saveOrders();renderOrd()}
 });
 $('viewOrd').addEventListener('change',function(e){var s=e.target.closest('[data-ost]');if(!s)return;var o=orders.find(function(x){return x.id===s.dataset.ost});if(o){o.status=s.value;saveOrders()}});
+
+/* ---- Purchase orders (supplier ko) ---- */
+var pos=[];try{pos=JSON.parse(localStorage.getItem('cld-pos'))||[]}catch(e){}
+function savePos(){persist('cld-pos',pos)}
+function poItemsOf(){return Array.prototype.map.call(document.querySelectorAll('#poItems .poitem'),function(r){var g=function(c){return r.querySelector('.'+c).value};return{name:g('pi-n').trim(),qty:Number(g('pi-q'))||0,unit:g('pi-u'),rate:Number(g('pi-r'))||0}}).filter(function(i){return i.name&&i.qty>0&&i.rate>0})}
+function poRow(it){
+  var d=document.createElement('div');d.className='poitem';it=it||{};
+  d.innerHTML='<label>Item<input class="pi-n" placeholder="Wood charcoal / River pebble" value="'+esc(it.name||'')+'"></label><label>Qty<input class="pi-q" type="number" step="any" inputmode="decimal" value="'+esc(it.qty||'')+'"></label><label>Unit<select class="pi-u">'+['ton','kg','bag','pcs'].map(function(u){return'<option'+(u===(it.unit||'ton')?' selected':'')+'>'+u+'</option>'}).join('')+'</select></label><label>Rate (Rs/unit)<input class="pi-r" type="number" step="any" inputmode="decimal" value="'+esc(it.rate||'')+'"></label><button class="btn" type="button" data-pidel="1">X</button>';
+  $('poItems').appendChild(d);
+}
+function poAmt(items){return items.reduce(function(a,i){return a+i.qty*i.rate},0)}
+function poTotal(o){var a=poAmt(o.items||[]);return a+a*(Number(o.gst)||0)/100}
+function poFY(d){var y=d.getFullYear(),m=d.getMonth();var a=m>=3?y:y-1;return String(a).slice(2)+'-'+String(a+1).slice(2)}
+function poNo(dstr){var d=new Date(dstr||Date.now()),fy=poFY(d),n=pos.filter(function(x){return x.no&&x.no.indexOf('/'+fy+'/')>0}).length+1;return 'PO/'+fy+'/'+String(n).padStart(3,'0')}
+function poLive(){var it=poItemsOf(),a=poAmt(it),g=Number(val('poGst'))||0;$('poTot').textContent=it.length?('Amount '+inr(a)+' + GST '+g+'% '+inr(a*g/100)+' = TOTAL '+inr(a+a*g/100)):''}
+function poText(o){
+  var s=settings,L=['PURCHASE ORDER','PO No: '+o.no,'Date: '+o.date,'',(s.brand||''),(s.gstin?'GSTIN: '+s.gstin:''),(s.phone?'Mobile/WhatsApp: +91 '+s.phone:''),(s.email?'Email: '+s.email:''),'','To: '+o.supplier,''];
+  o.items.forEach(function(i,k){L.push((k+1)+'. '+i.name+' - '+i.qty+' '+i.unit+' x '+inr(i.rate)+' = '+inr(i.qty*i.rate))});
+  var a=poAmt(o.items),g=Number(o.gst)||0;
+  L.push('','Amount: '+inr(a),'GST @'+g+'%: '+inr(a*g/100),'TOTAL: '+inr(a+a*g/100),'');
+  if(o.deliv)L.push('Delivery by: '+o.deliv);if(o.addr)L.push('Deliver to: '+o.addr);if(o.terms)L.push('Payment terms: '+o.terms);if(o.note)L.push('Note: '+o.note);
+  L.push('','Kripya is PO ko confirm karein (rate, quantity, delivery date).','','Dhanyavaad,',(s.me||''),(s.brand||''));
+  return L.filter(function(x,i,a){return !(x===''&&a[i-1]==='')}).join('\n');
+}
+function poPrint(o){
+  var s=settings,a=poAmt(o.items),g=Number(o.gst)||0,rows=o.items.map(function(i,k){return'<tr><td>'+(k+1)+'</td><td>'+esc(i.name)+'</td><td style="text-align:right">'+esc(i.qty)+' '+esc(i.unit)+'</td><td style="text-align:right">'+inr(i.rate)+'</td><td style="text-align:right">'+inr(i.qty*i.rate)+'</td></tr>'}).join('');
+  var w=window.open('','_blank');if(!w){toast('Print nahi khula. Copy karke bhejo');return}
+  w.document.write('<html><head><title>'+esc(o.no)+'</title><style>body{font:14px Calibri,Carlito,Arial;padding:28px;color:#111}table{border-collapse:collapse;width:100%;margin:14px 0}td,th{border:1px solid #999;padding:6px 8px;text-align:left}h1{margin:0;font-size:22px}.r{text-align:right}</style></head><body><h1>PURCHASE ORDER</h1><div style="display:flex;justify-content:space-between;margin-top:8px"><div><b>'+esc(s.brand||'')+'</b><br>'+(s.gstin?'GSTIN: '+esc(s.gstin)+'<br>':'')+(s.phone?'+91 '+esc(s.phone)+'<br>':'')+esc(s.email||'')+'</div><div class="r">PO No: <b>'+esc(o.no)+'</b><br>Date: '+esc(o.date)+(o.deliv?'<br>Delivery by: '+esc(o.deliv):'')+'</div></div><p><b>To:</b> '+esc(o.supplier)+'</p><table><tr><th>#</th><th>Item</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr>'+rows+'<tr><td colspan="4" class="r">Amount</td><td class="r">'+inr(a)+'</td></tr><tr><td colspan="4" class="r">GST @'+g+'%</td><td class="r">'+inr(a*g/100)+'</td></tr><tr><td colspan="4" class="r"><b>TOTAL</b></td><td class="r"><b>'+inr(a+a*g/100)+'</b></td></tr></table>'+(o.addr?'<p><b>Deliver to:</b> '+esc(o.addr)+'</p>':'')+(o.terms?'<p><b>Payment terms:</b> '+esc(o.terms)+'</p>':'')+(o.note?'<p><b>Note:</b> '+esc(o.note)+'</p>':'')+'<p style="margin-top:40px">Authorised signatory<br><br>'+esc(s.me||'')+'<br>'+esc(s.brand||'')+'</p></body></html>');
+  w.document.close();w.focus();setTimeout(function(){w.print()},300);
+}
+var PO_ST=['Draft','Sent','Confirmed','Received','Cancelled'];
+function renderPo(){
+  if(document.body.dataset.view!=='po')return;
+  var names={};leads.forEach(function(l){if(l.cat==='supplier'&&l.name)names[l.name]=1});
+  if(!Object.keys(names).length)leads.forEach(function(l){if(l.name&&!l.inbound&&l.cat!=='inbound')names[l.name]=1});
+  $('poSupList').innerHTML=Object.keys(names).sort().slice(0,1500).map(function(n){return'<option value="'+esc(n)+'">'}).join('');
+  if(!$('poItems').children.length)poRow();
+  var t=today(),tot=0,paid=0,open=0;
+  pos.forEach(function(o){if(o.status==='Cancelled')return;var a=poTotal(o);tot+=a;paid+=Number(o.paid)||0;if(o.status!=='Received')open++});
+  $('poStats').innerHTML='<div class="stat"><b>'+pos.length+'</b><span>PO</span></div><div class="stat"><b>'+open+'</b><span>Open PO</span></div><div class="stat"><b>'+inr(tot)+'</b><span>Total kharid</span></div><div class="stat"><b style="color:#b91c1c">'+inr(Math.max(0,tot-paid))+'</b><span>Dena baaki</span></div>';
+  $('poList').innerHTML=pos.length?pos.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))||String(b.no).localeCompare(String(a.no))}).map(function(o){
+    var a=poTotal(o),bal=a-(Number(o.paid)||0),late=o.deliv&&o.deliv<t&&o.status!=='Received'&&o.status!=='Cancelled';
+    return '<article class="lead"><div class="lead-head"><div><div class="name">'+esc(o.no)+' · '+esc(o.supplier)+'</div><div class="meta">'+esc(o.date)+' · '+o.items.map(function(i){return esc(i.name)+' '+esc(i.qty)+' '+esc(i.unit)}).join(', ')+'</div></div><select data-post="'+esc(o.id)+'" style="width:auto">'+PO_ST.map(function(x){return'<option'+(x===o.status?' selected':'')+'>'+x+'</option>'}).join('')+'</select></div>'+
+     '<div class="ereq">Total '+inr(a)+' · Diya '+inr(o.paid)+' · <b style="color:'+(bal>0?'#b91c1c':'#16a34a')+'">'+(bal>0?'Dena '+inr(bal):'Poora chuka diya')+'</b>'+(o.deliv?' · delivery '+esc(o.deliv)+(late?' (late)':''):'')+'</div>'+
+     '<div class="ebtns"><button class="btn primary" type="button" data-pwa="'+esc(o.id)+'">WhatsApp</button><button class="btn" type="button" data-pml="'+esc(o.id)+'">Email</button><button class="btn" type="button" data-ppr="'+esc(o.id)+'">Print/PDF</button><button class="btn" type="button" data-pcp="'+esc(o.id)+'">Copy</button></div>'+
+     '<div class="ebtns"><input type="number" inputmode="decimal" placeholder="Payment diya (Rs)" data-ppay-in="'+esc(o.id)+'" style="width:160px"><button class="btn" type="button" data-ppay="'+esc(o.id)+'">Payment jodo</button><button class="btn" type="button" data-pdel="'+esc(o.id)+'">Delete</button></div></article>'}).join(''):'<div class="empty">Abhi koi purchase order nahi hai.</div>';
+}
+$('poDate').value=today();
+$('poSup').addEventListener('change',function(){var l=leads.find(function(x){return x.name===val('poSup')});if(l){if(l.phone)$('poPhone').value=l.phone;if(l.email)$('poEmail').value=l.email}});
+$('poAddRow').addEventListener('click',function(){poRow()});
+$('viewPo').addEventListener('input',poLive);
+$('poItems').addEventListener('click',function(e){var b=e.target.closest('[data-pidel]');if(!b)return;if($('poItems').children.length>1)b.parentNode.remove();poLive()});
+$('poSave').addEventListener('click',function(){
+  var sup=val('poSup').trim(),it=poItemsOf();
+  if(!sup||!it.length){toast('Supplier aur kam se kam ek item (qty, rate) daalo');return}
+  var d=val('poDate')||today(),lead=leads.find(function(l){return l.name===sup});
+  var o={id:newId(),no:poNo(d),date:d,supplier:sup,leadId:lead?lead.id:'',phone:val('poPhone'),email:val('poEmail'),items:it,gst:Number(val('poGst'))||0,deliv:val('poDeliv'),addr:val('poAddr'),terms:val('poTerms'),note:val('poNote'),paid:0,status:'Draft'};
+  pos.push(o);savePos();
+  $('poItems').innerHTML='';poRow();['poSup','poPhone','poEmail','poDeliv','poAddr','poNote'].forEach(function(i){$(i).value=''});poLive();
+  toast(o.no+' save ho gaya');renderPo();
+});
+$('viewPo').addEventListener('click',function(e){
+  var b=e.target.closest('[data-pwa],[data-pml],[data-ppr],[data-pcp],[data-ppay],[data-pdel]');if(!b)return;
+  var id=b.dataset.pwa||b.dataset.pml||b.dataset.ppr||b.dataset.pcp||b.dataset.ppay||b.dataset.pdel,o=pos.find(function(x){return x.id===id});if(!o)return;
+  if(b.dataset.pwa){var d=digits(o.phone);if(!d){toast('Supplier ka WhatsApp number daalo (PO banate waqt)');return}if(o.status==='Draft'){o.status='Sent';savePos()}window.open('https://wa.me/'+d+'?text='+encodeURIComponent(poText(o)),'_blank');renderPo()}
+  else if(b.dataset.pml){if(!o.email){toast('Supplier ka email nahi hai');return}if(o.status==='Draft'){o.status='Sent';savePos()}window.location.href='mailto:'+o.email+'?subject='+encodeURIComponent('Purchase Order '+o.no+' - '+(settings.brand||''))+'&body='+encodeURIComponent(poText(o));renderPo()}
+  else if(b.dataset.ppr){poPrint(o)}
+  else if(b.dataset.pcp){copy(poText(o))}
+  else if(b.dataset.ppay){var inp=document.querySelector('[data-ppay-in="'+id+'"]'),v=Number(inp&&inp.value);if(!(v>0)){toast('Amount daalo');return}o.paid=(Number(o.paid)||0)+v;savePos();renderPo()}
+  else if(b.dataset.pdel&&confirm('Ye PO delete karna hai?')){pos=pos.filter(function(x){return x.id!==id});savePos();renderPo()}
+});
+$('viewPo').addEventListener('change',function(e){var s=e.target.closest('[data-post]');if(!s)return;var o=pos.find(function(x){return x.id===s.dataset.post});if(o){o.status=s.value;savePos();renderPo()}});
 /* quotation */
 $('qParty').addEventListener('change',function(){var l=leads.find(function(x){return x.name===val('qParty')});if(l){if(l.phone)$('qPhone').value=l.phone;if(l.email)$('qEmail').value=l.email}});
 function quoteText(){
@@ -1236,7 +1338,7 @@ $('viewDay').addEventListener('click',function(e){
   setTimeout(function(){if(l.cat==='inbound'){enqDone(l.id,l.repliedAt?'fu':'reply')}else{var now=Date.now();update(l.id,{calls:(l.calls||[]).concat([{t:now,o:'plan'}]).slice(-15),lastCall:now,lastContact:today(),status:(!l.status||l.status==='New')?'Contacted':l.status,nextFollowUp:(l.nextFollowUp&&l.nextFollowUp>today())?l.nextFollowUp:addDays(2)})}},300);
 });
 /* backup */
-function bkData(){return JSON.stringify({app:'shyla',v:1,at:new Date().toISOString(),leads:leads,orders:orders,settings:settings})}
+function bkData(){return JSON.stringify({app:'shyla',v:1,at:new Date().toISOString(),leads:leads,orders:orders,pos:pos,settings:settings})}
 function bkInfo(){var t=localStorage.getItem('cld-lastbackup');$('bkInfo').textContent=t?'Aakhri backup: '+t.slice(0,10):'Abhi tak backup nahi liya.'}
 $('bkSave').addEventListener('click',function(){
   var name='shyla-backup-'+today()+'.json',txt=bkData(),C=window.Capacitor,P=C&&C.Plugins;
@@ -1251,6 +1353,7 @@ function restore(txt){
   if(!d||!Array.isArray(d.leads)){toast('Backup me leads nahi mile');return}
   var n=0,i=0,list=d.leads;
   if(Array.isArray(d.orders)){var ids={};orders.forEach(function(o){ids[o.id]=1});d.orders.forEach(function(o){if(o&&o.id&&!ids[o.id])orders.push(o)});saveOrders()}
+  if(Array.isArray(d.pos)){var pi={};pos.forEach(function(o){pi[o.id]=1});d.pos.forEach(function(o){if(o&&o.id&&!pi[o.id])pos.push(o)});savePos()}
   if(d.settings&&typeof d.settings==='object'){Object.keys(d.settings).forEach(function(k){if(d.settings[k]!==''&&d.settings[k]!=null)settings[k]=d.settings[k]});persist('cld-settings',settings)}
   (function step(){if(i>=list.length){toast(n+' leads wapas aaye');render();return}
     var chunk=list.slice(i,i+10);i+=10;
