@@ -410,9 +410,9 @@ var DEFAULTS={
  bscript:'Namaste, main {me} bol raha hoon {brand} se. Pichhla maal kaisa raha? Agla order kab aur kitna chahiye? Payment ka kya status hai?',
  tmsg:'Namaste {person}, main {me} ({brand}) se bol raha hoon. {area} route par gaadi chahiye ({item}). Rate aur availability bataiye. Mera number: {myphone}',
  tscript:'Namaste, main {me} bol raha hoon {brand} se. {area} ki taraf maal bhejna hai, {item} gaadi available hai? Kitna rate padega aur kab tak lag jayegi?',
- emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. Hum charcoal ke manufacturer/supplier hain. Aapko kitni quantity chahiye aur delivery kahan karni hai? Rate, spec aur sample turant bhej denge. Mera number: {myphone}',
- escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',
- efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. Rate/sample ke liye kab baat kar sakte hain? Mera number: {myphone}',
+ emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. {pitch} {ask} Rate aur details bhej denge. Mera number: {myphone}',
+ escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\n{pitch}\n\n{ask} Rate kab tak chahiye?',
+ efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. {ask} Mera number: {myphone}',
  esubj:'Re: {product} enquiry - {brand}',
  subject:'Charcoal supply for lead smelting - {brand}',
  script:'Namaste, main {me} bol raha hoon {brand} se. Kya meri baat {person} ji se ho rahi hai?\n\nHum lead smelting ke liye charcoal supply karte hain. Aap abhi smelting me coke ya koyla kya use karte ho, aur mahine me kitna lagta hai?\n\nAgar aap chaho to main sample aur rate WhatsApp par bhej deta hoon. Kab dobara baat karein?',
@@ -434,6 +434,7 @@ var DEFAULTS={
 };
 var leads=[],store=null,settings=load('cld-settings',DEFAULTS);
 ['brand','phone','email','gstin','web','emsg','escript','efu','esubj'].forEach(function(k){if(!settings[k])settings[k]=DEFAULTS[k]});
+(function(){var OLD={emsg:'Namaste {person}, {brand} me aapki enquiry ({product}) ke liye dhanyavaad. Hum charcoal ke manufacturer/supplier hain. Aapko kitni quantity chahiye aur delivery kahan karni hai? Rate, spec aur sample turant bhej denge. Mera number: {myphone}',escript:'Namaste, main {me} bol raha hoon {brand} se. Aapne {product} ki enquiry daali thi. Kya meri baat {person} ji se ho rahi hai?\n\nQuantity kitni chahiye, kis grade/size me, aur delivery kahan? Rate aur sample kab tak chahiye?',efu:'Namaste {person}, {brand} se. {product} ki enquiry par maine pehle message bheja tha. Rate/sample ke liye kab baat kar sakte hain? Mera number: {myphone}'},ch=0;Object.keys(OLD).forEach(function(k){if(settings[k]===OLD[k]){settings[k]=DEFAULTS[k];ch=1}});if(ch)persist('cld-settings',settings)})();
 if(settings.email==='shyla.enterpez@gmail.com'){settings.email=DEFAULTS.email;persist('cld-settings',settings)}
 var $=function(id){return document.getElementById(id)};
 
@@ -454,9 +455,38 @@ function inCat(l,c){return c==='buyer'?(l.cat==='buyer'||l.status==='Won'):(l.ca
 var PILL={supplier:'Supplier',buyer:'Buyer',transport:'Transporter',inbound:'Enquiry',carbide:'Carbide',stone:'Stone',caco3:'CaCO3',actc:'ActC',agar:'Agarbatti',cpow:'Powder'};
 var PRE={supplier:'u',buyer:'b',transport:'t',inbound:'e',dealer:'d',carbide:'c',stone:'s',caco3:'k',actc:'v',agar:'g',cpow:'p'};
 function tpl(k,l){if(k==='msg'&&l&&l.fuText)return l.fuText;var c=l&&l.cat;var pre=PRE[c]||'';return (pre&&settings[pre+k])||settings[k]||''}
+
+function enqFam(l){
+  var t=String((l&&l.enqReq)||'').toLowerCase().replace(/char\s*coal/g,'charcoal').replace(/wood\s*coal/g,'wood charcoal');
+  var ch=/charcoal/.test(t);
+  if(/activated|active (carbon|char)/.test(t)||(!ch&&/carbon/.test(t)))return 'actc';
+  if(ch){
+    if(/coconut/.test(t))return 'coco';
+    if(/briquet|pellet|hookah|shisha|cube|sawdust|saw dust/.test(t))return 'briq';
+    if(/powder/.test(t))return 'cpow';
+    return 'wood';
+  }
+  if(/hookah|shisha/.test(t))return 'briq';
+  if(/biomass|sawdust|saw dust|wood dust|sugarcane|pellet|briquet|husk|groundnut|ground nut/.test(t))return 'bio';
+  if(/pebble|stone|gravel|boulder|bolder|cobble|aggregate|river rock/.test(t))return 'stone';
+  if(/(^|[^a-z])coal([^a-z]|$)/.test(t))return 'coal';
+  if(/wood|babul|babool|tandoor|bbq|barbecue|barbeque|lump|firewood|jad/.test(t))return 'wood';
+  return 'gen';
+}
+var PITCH={
+  wood:['Hum wood charcoal (lump) ke supplier hain - tandoor, BBQ aur industrial use ke liye.','Aapko kis size/grade ki, kitni quantity chahiye aur delivery kahan karni hai?'],
+  coco:['Hum coconut shell charcoal/briquette supply karte hain.','Aapko kis size/type me, kitni quantity chahiye aur delivery kahan karni hai?'],
+  briq:['Hum charcoal briquette supply karte hain.','Aapko kis shape/size me, kitni quantity chahiye aur delivery kahan karni hai?'],
+  cpow:['Hum charcoal powder supply karte hain.','Aapko kis mesh/grade me, kitni quantity chahiye aur delivery kahan karni hai?'],
+  stone:['Hum natural river pebbles/stones ke supplier hain.','Aapko kis size (mm) aur colour me, kitni quantity (tonne) chahiye aur delivery kahan karni hai?'],
+  actc:['Aapki enquiry activated carbon ke liye hai - hum mainly charcoal supply karte hain.','Kya aap charcoal bhi dekh rahe hain? Agar haan to size aur quantity bata dijiye.'],
+  coal:['Aapki enquiry coal ke liye hai - hum mainly charcoal supply karte hain.','Kya aap charcoal/briquette bhi dekh rahe hain? Agar haan to size aur quantity bata dijiye.'],
+  bio:['Aapki enquiry biomass briquette/pellet ke liye hai - hum mainly charcoal supply karte hain.','Kya aap charcoal/briquette bhi dekh rahe hain? Agar haan to size aur quantity bata dijiye.'],
+  gen:['Aapki requirement hum dekh rahe hain.','Kripya apni exact requirement, quantity aur delivery location bata dijiye.']
+};
 function fill(t,l){
   var s=settings;
-  return t.replace(/\{item\}/g,l.item||'maal').replace(/\{area\}/g,l.area||'').replace(/\{product\}/g,l.enqReq||'charcoal').replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
+  return t.replace(/\{pitch\}/g,(PITCH[enqFam(l)]||PITCH.gen)[0]).replace(/\{ask\}/g,(PITCH[enqFam(l)]||PITCH.gen)[1]).replace(/\{item\}/g,l.item||'maal').replace(/\{area\}/g,l.area||'').replace(/\{product\}/g,l.enqReq||'charcoal').replace(/\{company\}/g,l.name||'').replace(/\{person\}/g,l.person||'Sir/Madam').replace(/\{me\}/g,s.me||'').replace(/\{brand\}/g,s.brand||'').replace(/\{myphone\}/g,s.phone||'').replace(/\s+\(\)/g,'').replace(/\s{2,}/g,' ').replace(/ - $/,'');
 }
 function sig(){var s=settings;return '\n\n--\n'+(s.brand||'')+(s.gstin?'\nGSTIN: '+s.gstin:'')+(s.phone?'\nMobile/WhatsApp: +91 '+s.phone:'')+(s.email?'\nEmail: '+s.email:'')+(s.web?'\nWeb: '+s.web:'')}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
