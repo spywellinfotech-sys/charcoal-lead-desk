@@ -133,8 +133,25 @@ function doPost(e) {
   function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
   try {
     if (!e || !e.parameter || e.parameter.key !== CFG.SECRET) return out({ ok: false, error: 'key galat' });
+    var act = e.parameter.action || 'backup';
     var body = e.postData && e.postData.contents;
     if (!body || body.length < 20) return out({ ok: false, error: 'khali data' });
+    if (act === 'mail') {
+      var m = JSON.parse(body), sent = 0, failed = 0;
+      (m.items || []).forEach(function (it) {
+        try {
+          if (MailApp.getRemainingDailyQuota() < 1) { failed++; return; }
+          MailApp.sendEmail({ to: it.to, subject: m.subject, body: it.body, name: CFG.BRAND, replyTo: CFG.EMAIL });
+          sent++;
+        } catch (er) { failed++; }
+      });
+      return out({ ok: true, sent: sent, failed: failed, quotaLeft: MailApp.getRemainingDailyQuota() });
+    }
+    if (act === 'wa') {
+      var w = JSON.parse(body), ws = 0, wf = 0;
+      (w.items || []).forEach(function (it) { if (sendWa_({ phone: String(it.phone).slice(-10), person: it.person })) ws++; else wf++; });
+      return out({ ok: true, sent: ws, failed: wf });
+    }
     var it = DriveApp.getFoldersByName('Shyla Backups');
     var folder = it.hasNext() ? it.next() : DriveApp.createFolder('Shyla Backups');
     function put(name) {

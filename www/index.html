@@ -72,6 +72,8 @@ details.panel>summary{cursor:pointer;font:600 20px/1.1 var(--f-display);letter-s
 body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="day"] .lv,body[data-view="ord"] .lv,body[data-view="enq"] .catTabs,body[data-view="day"] .catTabs,body[data-view="ord"] .catTabs{display:none}
 .xv{display:none;flex-direction:column;gap:12px}
 body[data-view="day"] #viewDay,body[data-view="ord"] #viewOrd{display:flex}
+body[data-view="bc"] .lv,body[data-view="bc"] .catTabs{display:none}
+body[data-view="bc"] #viewBc{display:flex}
 body[data-view="po"] .lv,body[data-view="po"] .catTabs{display:none}
 body[data-view="po"] #viewPo{display:flex}
 .poitem{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;align-items:end}
@@ -168,6 +170,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
     <button class="tab" role="tab" data-view="day" aria-selected="false" type="button" id="tabDay">Aaj</button>
     <button class="tab" role="tab" data-view="ord" aria-selected="false" type="button" id="tabOrd">Orders</button>
+    <button class="tab" role="tab" data-view="bc" aria-selected="false" type="button" id="tabBc">Broadcast</button>
     <button class="tab" role="tab" data-view="po" aria-selected="false" type="button" id="tabPo">Purchase</button>
     <button class="tab" role="tab" data-view="net" aria-selected="false" type="button" id="tabNet">Network</button>
   </nav>
@@ -213,6 +216,31 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     </div>
     <div id="dayList" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="panel"><h2>Report</h2><div id="repBody"></div></div>
+  </section>
+
+  <section class="xv" id="viewBc">
+    <div class="panel">
+      <h2>Ek message, poori category ko</h2>
+      <p class="hint">Category chuno, message likho, aur bhejna shuru karo. WhatsApp me har contact par aapko ek baar "Send" dabana hota hai (WhatsApp isse zyada auto nahi karne deta). Email server se apne aap sab ko ja sakta hai.</p>
+      <div class="grid2">
+        <label>Category<select id="bcCat"></select></label>
+        <label>State (optional)<select id="bcState"></select></label>
+        <label>Kaise bhejna hai<select id="bcCh"><option value="wa">WhatsApp</option><option value="mail">Email</option></select></label>
+        <label>Jinse pichhle ___ din me baat hui unhe chhodo<input id="bcSkip" type="number" min="0" value="7" inputmode="numeric"></label>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="bcNew" style="width:auto"> Sirf naye contact (abhi tak baat nahi hui)</label>
+      <label id="bcSubjL" hidden>Email subject<input id="bcSubj"></label>
+      <label>Message ({person}, {company}, {area}, {item}, {product} bhar jayenge)<textarea id="bcMsg" style="min-height:140px"></textarea></label>
+      <div id="bcInfo" class="hint"></div>
+      <div class="row-actions">
+        <button class="btn primary" id="bcStart" type="button">WhatsApp bhejna shuru karo</button>
+        <button class="btn primary" id="bcNext" type="button" hidden>Agla contact</button>
+        <button class="btn" id="bcStop" type="button" hidden>Roko</button>
+        <button class="btn primary" id="bcMail" type="button" hidden>Sab ko email bhejo (server se)</button>
+      </div>
+      <div id="bcProg" class="hint"></div>
+      <div id="bcList" class="note"></div>
+    </div>
   </section>
 
   <section class="xv" id="viewPo">
@@ -628,7 +656,7 @@ function renderCats(){
   $('btnAdd').textContent=net?'+ Naya contact':'+ Nayi company';
 }
 function render(){renderCats();
-  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();
+  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();renderBc();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
@@ -1243,6 +1271,71 @@ $('viewOrd').addEventListener('click',function(e){
 });
 $('viewOrd').addEventListener('change',function(e){var s=e.target.closest('[data-ost]');if(!s)return;var o=orders.find(function(x){return x.id===s.dataset.ost});if(o){o.status=s.value;saveOrders()}});
 
+
+/* ---- Broadcast: ek message poori category ko ---- */
+var bcQ=[],bcI=0,bcRun=false;
+function openUrl(u){var a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+function bcLeads(){
+  var cat=val('bcCat'),st=val('bcState'),ch=val('bcCh'),onlyNew=$('bcNew').checked,skip=Number(val('bcSkip'))||0,seen={},cut=Date.now()-skip*864e5;
+  return leads.filter(function(l){
+    if(!inCat(l,cat))return false;
+    if(st&&l.state!==st)return false;
+    if(ch==='wa'&&digits(l.phone).length<10)return false;
+    if(ch==='mail'&&!/@/.test(l.email||''))return false;
+    if(onlyNew&&l.status&&l.status!=='New')return false;
+    if(skip&&((l.lastCall&&l.lastCall>cut)||(l.lastContact&&Date.parse(l.lastContact)>cut)))return false;
+    var k=ch==='wa'?digits(l.phone).slice(-10):String(l.email).toLowerCase();if(seen[k])return false;seen[k]=1;return true;
+  });
+}
+function bcDefaultMsg(){var cat=val('bcCat'),l={cat:cat};$('bcMsg').value=cat==='inbound'?settings.emsg:(tpl('msg',l)||settings.msg||'');$('bcSubj').value=(cat==='inbound'?settings.esubj:settings.subject)||''}
+function bcRefresh(){
+  var ch=val('bcCh'),L=bcLeads();
+  $('bcSubjL').hidden=ch!=='mail';$('bcStart').hidden=ch!=='wa'||bcRun;$('bcMail').hidden=ch!=='mail';
+  $('bcInfo').textContent=L.length+' contact ko jayega'+(ch==='wa'?' (WhatsApp number wale)':' (email wale)')+'.';
+  $('bcList').textContent=L.slice(0,25).map(function(l){return l.name}).join(' · ')+(L.length>25?' ... aur '+(L.length-25):'');
+}
+function renderBc(){
+  if(document.body.dataset.view!=='bc')return;
+  if(!$('bcCat').options.length){$('bcCat').innerHTML=CATOPTS.map(function(o){return'<option value="'+o[0]+'">'+o[1]+'</option>'}).join('');bcDefaultMsg()}
+  var sts={};leads.forEach(function(l){if(inCat(l,val('bcCat'))&&l.state)sts[l.state]=1});
+  var cur=val('bcState');$('bcState').innerHTML='<option value="">Sab state</option>'+Object.keys(sts).sort().map(function(x){return'<option'+(x===cur?' selected':'')+'>'+esc(x)+'</option>'}).join('');
+  bcRefresh();
+}
+function bcLog(l){var now=Date.now();update(l.id,{calls:(l.calls||[]).concat([{t:now,o:'bcast'}]).slice(-15),lastCall:now,lastContact:today(),status:(!l.status||l.status==='New')?'Contacted':l.status,nextFollowUp:(l.nextFollowUp&&l.nextFollowUp>today())?l.nextFollowUp:addDays(3)})}
+function bcSendOne(){
+  if(bcI>=bcQ.length){bcStop(true);return}
+  var l=find(bcQ[bcI]);bcI++;
+  if(l){openUrl('https://wa.me/'+digits(l.phone)+'?text='+encodeURIComponent(fill(val('bcMsg'),l)));bcLog(l)}
+  $('bcProg').textContent=(l?l.name+' khola. ':'')+bcI+' / '+bcQ.length+' ho gaye. WhatsApp me Send dabake wapas aao, phir "Agla contact".';
+  if(bcI>=bcQ.length){$('bcNext').hidden=true;$('bcProg').textContent+=' (Ye aakhri tha)'}
+}
+function bcStop(done){bcRun=false;$('bcNext').hidden=true;$('bcStop').hidden=true;$('bcProg').textContent=done?'Sab ho gaya ('+bcQ.length+' contact).':'Roka. '+bcI+' / '+bcQ.length+' ho chuke.';bcRefresh()}
+$('bcCat').addEventListener('change',function(){$('bcState').value='';bcDefaultMsg();renderBc()});
+['bcState','bcCh','bcSkip','bcNew'].forEach(function(i){$(i).addEventListener('change',bcRefresh)});
+$('bcStart').addEventListener('click',function(){
+  var L=bcLeads();if(!L.length){toast('Is filter me koi contact nahi');return}
+  if(!val('bcMsg').trim()){toast('Message likho');return}
+  bcQ=L.map(function(l){return l.id});bcI=0;bcRun=true;$('bcStart').hidden=true;$('bcNext').hidden=false;$('bcStop').hidden=false;bcSendOne();
+});
+$('bcNext').addEventListener('click',bcSendOne);
+$('bcStop').addEventListener('click',function(){bcStop(false)});
+$('bcMail').addEventListener('click',function(){
+  var L=bcLeads(),u=(settings.enqUrl||'').trim();
+  if(!L.length){toast('Is filter me koi contact nahi');return}
+  if(!val('bcMsg').trim()||!val('bcSubj').trim()){toast('Subject aur message likho');return}
+  var b=this;if(!b.dataset.arm){b.dataset.arm=1;b.textContent=L.length+' ko bhejna pakka? Dobara dabao';setTimeout(function(){delete b.dataset.arm;b.textContent='Sab ko email bhejo (server se)'},6000);return}
+  delete b.dataset.arm;b.textContent='Sab ko email bhejo (server se)';
+  if(!u){var bcc=L.slice(0,40).map(function(l){return l.email}).join(',');L.slice(0,40).forEach(bcLog);window.location.href='mailto:?bcc='+encodeURIComponent(bcc)+'&subject='+encodeURIComponent(val('bcSubj'))+'&body='+encodeURIComponent(fill(val('bcMsg'),{person:'Sir/Madam'})+sig());toast('Server URL nahi hai: pehle 40 ko BCC draft khola');return}
+  var i=0,ok=0,bad=0;$('bcProg').textContent='Bhej raha hu...';
+  (function batch(){
+    if(i>=L.length){$('bcProg').textContent='Email: '+ok+' gaye, '+bad+' fail.';toast(ok+' email bheje');return}
+    var part=L.slice(i,i+20);i+=20;
+    fetch(u+(u.indexOf('?')<0?'?':'&')+'action=mail',{method:'POST',body:JSON.stringify({subject:val('bcSubj'),items:part.map(function(l){return{to:l.email,body:fill(val('bcMsg'),l)+sig()}})})}).then(function(r){return r.json()}).then(function(j){
+      if(!j||!j.ok){bad+=part.length;$('bcProg').textContent='Server error: '+((j&&j.error)||'script update karo');return}
+      ok+=j.sent;bad+=j.failed;part.slice(0,j.sent).forEach(bcLog);$('bcProg').textContent=(ok+bad)+' / '+L.length+' ho gaye...';setTimeout(batch,500)
+    }).catch(function(){bad+=part.length;$('bcProg').textContent='Net/URL error. '+ok+' gaye.'});
+  })();
+});
 /* ---- Purchase orders (supplier ko) ---- */
 var pos=[];try{pos=JSON.parse(localStorage.getItem('cld-pos'))||[]}catch(e){}
 function savePos(){persist('cld-pos',pos)}
@@ -1306,7 +1399,7 @@ $('poSave').addEventListener('click',function(){
 $('viewPo').addEventListener('click',function(e){
   var b=e.target.closest('[data-pwa],[data-pml],[data-ppr],[data-pcp],[data-ppay],[data-pdel]');if(!b)return;
   var id=b.dataset.pwa||b.dataset.pml||b.dataset.ppr||b.dataset.pcp||b.dataset.ppay||b.dataset.pdel,o=pos.find(function(x){return x.id===id});if(!o)return;
-  if(b.dataset.pwa){var d=digits(o.phone);if(!d){toast('Supplier ka WhatsApp number daalo (PO banate waqt)');return}if(o.status==='Draft'){o.status='Sent';savePos()}window.open('https://wa.me/'+d+'?text='+encodeURIComponent(poText(o)),'_blank');renderPo()}
+  if(b.dataset.pwa){var d=digits(o.phone);if(!d){toast('Supplier ka WhatsApp number daalo (PO banate waqt)');return}if(o.status==='Draft'){o.status='Sent';savePos()}openUrl('https://wa.me/'+d+'?text='+encodeURIComponent(poText(o)));renderPo()}
   else if(b.dataset.pml){if(!o.email){toast('Supplier ka email nahi hai');return}if(o.status==='Draft'){o.status='Sent';savePos()}window.location.href='mailto:'+o.email+'?subject='+encodeURIComponent('Purchase Order '+o.no+' - '+(settings.brand||''))+'&body='+encodeURIComponent(poText(o));renderPo()}
   else if(b.dataset.ppr){poPrint(o)}
   else if(b.dataset.pcp){copy(poText(o))}
