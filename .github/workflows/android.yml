@@ -27,6 +27,16 @@ jobs:
         run: npm install
       - name: Create Android project
         run: npx cap add android
+      - name: Notification permissions
+        run: |
+          python3 - <<'PY'
+          p='android/app/src/main/AndroidManifest.xml'
+          s=open(p).read()
+          for perm in ['android.permission.POST_NOTIFICATIONS','android.permission.SCHEDULE_EXACT_ALARM','android.permission.RECEIVE_BOOT_COMPLETED']:
+              if perm not in s:
+                  s=s.replace('<application','<uses-permission android:name="'+perm+'" />\n    <application',1)
+          open(p,'w').write(s)
+          PY
       - name: Apply app icon
         run: |
           pip install pillow --break-system-packages -q || pip install pillow -q

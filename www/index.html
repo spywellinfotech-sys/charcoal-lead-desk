@@ -72,6 +72,10 @@ details.panel>summary{cursor:pointer;font:600 20px/1.1 var(--f-display);letter-s
 body[data-view="call"] .lv,body[data-view="enq"] .lv,body[data-view="day"] .lv,body[data-view="ord"] .lv,body[data-view="enq"] .catTabs,body[data-view="day"] .catTabs,body[data-view="ord"] .catTabs{display:none}
 .xv{display:none;flex-direction:column;gap:12px}
 body[data-view="day"] #viewDay,body[data-view="ord"] #viewOrd{display:flex}
+body[data-view="promo"] .lv,body[data-view="promo"] .catTabs{display:none}
+body[data-view="promo"] #viewPromo{display:flex}
+.pcard img{max-width:100%;border-radius:8px;border:1px solid var(--line)}
+.dchips{display:flex;gap:4px;flex-wrap:wrap}.dchips label{display:flex;gap:3px;align-items:center;font-size:13px;border:1px solid var(--line);padding:3px 7px;border-radius:12px}.dchips input{width:auto}
 body[data-view="bc"] .lv,body[data-view="bc"] .catTabs{display:none}
 body[data-view="bc"] #viewBc{display:flex}
 body[data-view="po"] .lv,body[data-view="po"] .catTabs{display:none}
@@ -170,6 +174,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <button class="tab" role="tab" data-view="enq" aria-selected="false" type="button" id="tabEnq">Enquiries</button>
     <button class="tab" role="tab" data-view="day" aria-selected="false" type="button" id="tabDay">Aaj</button>
     <button class="tab" role="tab" data-view="ord" aria-selected="false" type="button" id="tabOrd">Orders</button>
+    <button class="tab" role="tab" data-view="promo" aria-selected="false" type="button" id="tabPromo">Promotion</button>
     <button class="tab" role="tab" data-view="bc" aria-selected="false" type="button" id="tabBc">Broadcast</button>
     <button class="tab" role="tab" data-view="po" aria-selected="false" type="button" id="tabPo">Purchase</button>
     <button class="tab" role="tab" data-view="net" aria-selected="false" type="button" id="tabNet">Network</button>
@@ -216,6 +221,36 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     </div>
     <div id="dayList" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="panel"><h2>Report</h2><div id="repBody"></div></div>
+  </section>
+
+  <section class="xv" id="viewPromo">
+    <div class="panel">
+      <h2>Aaj ka promotion</h2>
+      <div id="prStats" class="hint"></div>
+      <div id="prToday" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+    <div class="panel">
+      <h2>Roz reminder</h2>
+      <p class="hint">Roz is time par phone me notification aayega: "aaj ka post karo". (Sirf installed app me chalta hai.)</p>
+      <div class="grid2">
+        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="prRem" style="width:auto"> Reminder chalu</label>
+        <label>Time<input id="prTime" type="time" value="09:00"></label>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Naya post / poster</h2>
+      <div class="grid2">
+        <label>Product<select id="prProd"></select></label>
+        <label>Title (poster par)<input id="prTitle" placeholder="Khali = product ka naam"></label>
+      </div>
+      <label>Caption<textarea id="prCap" style="min-height:110px"></textarea></label>
+      <label>Din (kin dino me aana chahiye)</label>
+      <div class="dchips" id="prDays"></div>
+      <label>Apni image (khali = poster app khud banayega)<input id="prImg" type="file" accept="image/*"></label>
+      <img id="prPrev" alt="" hidden style="max-width:240px;border-radius:8px">
+      <div class="row-actions"><button class="btn" id="prGen" type="button">Poster dekho</button><button class="btn primary" id="prAdd" type="button">Post save karo</button><button class="btn" id="prPlan" type="button">Hafte ka plan banao</button></div>
+    </div>
+    <div class="panel"><h2>Saare posts</h2><div id="prList" style="display:flex;flex-direction:column;gap:8px"></div></div>
   </section>
 
   <section class="xv" id="viewBc">
@@ -656,7 +691,7 @@ function renderCats(){
   $('btnAdd').textContent=net?'+ Naya contact':'+ Nayi company';
 }
 function render(){renderCats();
-  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();renderBc();
+  stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();renderBc();renderPromo();
   var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
@@ -1272,6 +1307,109 @@ $('viewOrd').addEventListener('click',function(e){
 $('viewOrd').addEventListener('change',function(e){var s=e.target.closest('[data-ost]');if(!s)return;var o=orders.find(function(x){return x.id===s.dataset.ost});if(o){o.status=s.value;saveOrders()}});
 
 
+
+/* ---- Daily promotion ---- */
+var PRODS={
+  wood:{n:'Wood Charcoal',tag:'Tandoor | BBQ | Industrial',pts:['Bulk orders par best rate','Pan-India delivery','Sample available on request'],day:1,cap:'Premium wood charcoal - tandoor, BBQ aur industrial use ke liye. Bulk supply, seedha manufacturer se.'},
+  coco:{n:'Coconut Shell Charcoal',tag:'Briquettes | Lumps | Granules',pts:['Bulk orders par best rate','Pan-India delivery','Sample available on request'],day:2,cap:'Coconut shell charcoal / briquettes - hookah, BBQ aur industrial use. Bulk supply.'},
+  briq:{n:'Charcoal Briquettes',tag:'BBQ | Hookah | Industrial',pts:['Alag-alag shape aur size','Pan-India delivery','Sample available on request'],day:3,cap:'Charcoal briquettes - BBQ, hookah aur industrial use ke liye. Bulk supply.'},
+  stone:{n:'Natural River Pebbles',tag:'Landscaping | Garden | Decor',pts:['White, black, mix colour','Alag-alag size (mm / inch)','Pan-India delivery'],day:4,cap:'Natural river pebbles aur stones - landscaping, garden aur decor ke liye. Bulk supply.'},
+  cpow:{n:'Charcoal Powder',tag:'Industrial use',pts:['Alag-alag mesh/grade','Bulk packing','Pan-India delivery'],day:5,cap:'Charcoal powder - industrial use ke liye. Bulk supply.'},
+  other:{n:'Shyla Enterprise',tag:'Sustainable Resources | Better Tomorrow',pts:['Charcoal | Pebbles | Stones','Bulk orders','Pan-India delivery'],day:6,cap:'Charcoal aur natural stones ki bulk supply.'}
+};
+var DN=['Ravi','Som','Mangal','Budh','Guru','Shukra','Shani'];
+var promo=[];try{promo=JSON.parse(localStorage.getItem('cld-promo'))||[]}catch(e){}
+function savePromo(){persist('cld-promo',promo)}
+var prCur='';
+function idbOpen(){return new Promise(function(res){try{var r=indexedDB.open('shyla-promo',1);r.onupgradeneeded=function(){r.result.createObjectStore('img')};r.onsuccess=function(){res(r.result)};r.onerror=function(){res(null)}}catch(e){res(null)}})}
+function imgPut(id,data){return idbOpen().then(function(db){if(!db)return;return new Promise(function(res){var t=db.transaction('img','readwrite');t.objectStore('img').put(data,id);t.oncomplete=res;t.onerror=res})})}
+function imgGet(id){return idbOpen().then(function(db){if(!db)return '';return new Promise(function(res){var q=db.transaction('img').objectStore('img').get(id);q.onsuccess=function(){res(q.result||'')};q.onerror=function(){res('')}})})}
+function imgDel(id){return idbOpen().then(function(db){if(db)db.transaction('img','readwrite').objectStore('img').delete(id)})}
+function prCaption(prod,custom){var s=settings,P=PRODS[prod]||PRODS.other;return (custom||P.cap)+'\n\nRate/details ke liye WhatsApp karein: +91 '+(s.phone||'')+(s.web?'\n'+s.web:'')+'\n'+(s.brand||'')}
+function prPoster(prod,title){
+  return new Promise(function(res){
+    var P=PRODS[prod]||PRODS.other,c=document.createElement('canvas');c.width=c.height=1080;var x=c.getContext('2d');
+    var g=x.createLinearGradient(0,0,1080,1080);g.addColorStop(0,'#0b3d91');g.addColorStop(1,'#1e6fd9');x.fillStyle=g;x.fillRect(0,0,1080,1080);
+    x.fillStyle='rgba(255,255,255,.07)';x.beginPath();x.arc(940,160,260,0,7);x.fill();x.beginPath();x.arc(120,980,200,0,7);x.fill();
+    function wrap(t,mx,y,lh,font,col,xo){xo=xo||70;x.font=font;x.fillStyle=col;var w=t.split(' '),l='',yy=y;w.forEach(function(wd){var tt=l?l+' '+wd:wd;if(x.measureText(tt).width>mx&&l){x.fillText(l,xo,yy);l=wd;yy+=lh}else l=tt});x.fillText(l,xo,yy);return yy+lh}
+    function finish(){
+      var y=wrap(title||P.n,940,360,92,'bold 84px Calibri,Carlito,Arial','#ffffff');
+      y=wrap(P.tag,940,y+10,52,'42px Calibri,Carlito,Arial','#bcd7ff')+30;
+      P.pts.forEach(function(t){x.fillStyle='#ffd24a';x.fillText('✔',70,y);wrap(t,820,y,52,'44px Calibri,Carlito,Arial','#ffffff',135);y+=68});
+      x.fillStyle='#ffffff';x.fillRect(0,900,1080,180);
+      x.fillStyle='#0b3d91';x.font='bold 50px Calibri,Carlito,Arial';x.fillText((settings.brand||'Shyla Enterprise'),70,970);
+      x.fillStyle='#334155';x.font='40px Calibri,Carlito,Arial';x.fillText('WhatsApp: +91 '+(settings.phone||'')+(settings.web?'   '+settings.web:''),70,1030);
+      res(c.toDataURL('image/jpeg',.88));
+    }
+    var lg=document.querySelector('.logo');
+    if(lg&&lg.complete&&lg.naturalWidth){x.save();x.beginPath();x.arc(140,170,90,0,7);x.clip();x.drawImage(lg,50,80,180,180);x.restore()}
+    finish();
+  });
+}
+function prResize(file){return new Promise(function(res){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var m=1080,k=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};im.onerror=function(){res('')};im.src=r.result};r.readAsDataURL(file)})}
+function prFill(){$('prProd').innerHTML=Object.keys(PRODS).map(function(k){return'<option value="'+k+'">'+PRODS[k].n+'</option>'}).join('');$('prDays').innerHTML=DN.map(function(n,i){return'<label><input type="checkbox" data-day="'+i+'"> '+n+'</label>'}).join('');prProdChange()}
+function prProdChange(){var k=val('prProd'),P=PRODS[k];$('prCap').value=prCaption(k);document.querySelectorAll('#prDays input').forEach(function(c){c.checked=Number(c.dataset.day)===P.day})}
+function prDays(){return Array.prototype.filter.call(document.querySelectorAll('#prDays input'),function(c){return c.checked}).map(function(c){return Number(c.dataset.day)})}
+function prImageFor(p){return imgGet(p.id).then(function(d){return d||prPoster(p.prod,p.title)})}
+function prShare(p){
+  prImageFor(p).then(function(data){
+    var C=window.Capacitor,P=C&&C.Plugins,b64=data.split(',')[1],name='promo-'+p.id+'.jpg';
+    if(P&&P.Filesystem&&P.Share){
+      P.Filesystem.writeFile({path:name,data:b64,directory:'CACHE'}).then(function(r){return P.Share.share({title:p.title||'Promotion',text:p.caption,files:[r.uri],dialogTitle:'Kahan post karna hai? (WhatsApp / Status / Facebook / Instagram)'})}).catch(function(){copy(p.caption);toast('Share nahi hua. Caption copy ho gaya')});
+    }else{
+      fetch(data).then(function(r){return r.blob()}).then(function(bl){var f=new File([bl],name,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]}))return navigator.share({files:[f],text:p.caption});var a=document.createElement('a');a.href=data;a.download=name;document.body.appendChild(a);a.click();a.remove();copy(p.caption);toast('Image download hui, caption copy ho gaya')}).catch(function(){});
+    }
+  });
+}
+function prDoneToday(p){return (p.doneDates||[]).indexOf(today())>=0}
+function renderPromo(){
+  if(document.body.dataset.view!=='promo')return;
+  if(!$('prProd').options.length)prFill();
+  $('prRem').checked=!!settings.promoRemind;$('prTime').value=settings.promoTime||'09:00';
+  var wd=new Date().getDay(),wk=0,wdn=0,t=today();
+  var cutoff=addDays(-6);
+  promo.forEach(function(p){(p.doneDates||[]).forEach(function(d){if(d>=cutoff)wdn++})});
+  promo.forEach(function(p){wk+=(p.days||[]).length});
+  var td=promo.filter(function(p){return (p.days||[]).indexOf(wd)>=0});
+  $('prStats').textContent=promo.length?('Aaj ke '+td.length+' post, '+td.filter(function(p){return !prDoneToday(p)}).length+' baaki. Pichhle 7 din me '+wdn+' post hue (hafte ka plan '+wk+').'):'Abhi koi post nahi hai. "Hafte ka plan banao" dabao.';
+  $('prToday').innerHTML=td.length?td.map(function(p){return '<div class="pcard lead"><div class="name">'+esc(p.title||PRODS[p.prod].n)+(prDoneToday(p)?' - ho gaya':'')+'</div><img data-pimg="'+esc(p.id)+'" alt=""><div class="note" style="white-space:pre-wrap">'+esc(p.caption)+'</div><div class="ebtns"><button class="btn primary" type="button" data-pshare="'+esc(p.id)+'">Share (WhatsApp/FB/Insta)</button><button class="btn" type="button" data-pcopy="'+esc(p.id)+'">Caption copy</button><button class="btn" type="button" data-pdone="'+esc(p.id)+'">'+(prDoneToday(p)?'Wapas pending':'Ho gaya')+'</button></div></div>'}).join(''):'<div class="empty">Aaj ke liye koi post schedule nahi.</div>';
+  $('prList').innerHTML=promo.map(function(p){return '<div class="cbrow" style="flex-wrap:wrap;gap:8px"><span style="flex:1;min-width:150px"><b>'+esc(p.title||PRODS[p.prod].n)+'</b><br><span class="meta">'+(p.days||[]).map(function(d){return DN[d]}).join(', ')+'</span></span><button class="btn" type="button" data-pedit="'+esc(p.id)+'">Share</button><button class="btn" type="button" data-pdelp="'+esc(p.id)+'">Delete</button></div>'}).join('');
+  td.forEach(function(p){var im=document.querySelector('[data-pimg="'+p.id+'"]');if(im)prImageFor(p).then(function(d){im.src=d})});
+}
+$('prProd').addEventListener('change',prProdChange);
+$('prImg').addEventListener('change',function(){var f=this.files&&this.files[0];if(!f)return;prResize(f).then(function(d){prCur=d;$('prPrev').src=d;$('prPrev').hidden=!d})});
+$('prGen').addEventListener('click',function(){prPoster(val('prProd'),val('prTitle')).then(function(d){prCur='';$('prPrev').src=d;$('prPrev').hidden=false})});
+$('prAdd').addEventListener('click',function(){
+  var d=prDays();if(!d.length){toast('Kam se kam ek din chuno');return}
+  var p={id:newId(),prod:val('prProd'),title:val('prTitle').trim(),caption:val('prCap'),days:d,doneDates:[]};
+  promo.push(p);savePromo();(prCur?imgPut(p.id,prCur):Promise.resolve()).then(function(){prCur='';$('prImg').value='';$('prPrev').hidden=true;$('prTitle').value='';toast('Post save ho gaya');renderPromo()});
+});
+$('prPlan').addEventListener('click',function(){
+  if(promo.length&&!confirm('Hafte ka plan naye posts jodega. Aage badhein?'))return;
+  Object.keys(PRODS).forEach(function(k){promo.push({id:newId(),prod:k,title:'',caption:prCaption(k),days:[PRODS[k].day],doneDates:[]})});
+  savePromo();toast('6 posts ka hafte ka plan ban gaya');renderPromo();
+});
+$('viewPromo').addEventListener('click',function(e){
+  var b=e.target.closest('[data-pshare],[data-pcopy],[data-pdone],[data-pedit],[data-pdelp]');if(!b)return;
+  var id=b.dataset.pshare||b.dataset.pcopy||b.dataset.pdone||b.dataset.pedit||b.dataset.pdelp,p=promo.find(function(x){return x.id===id});if(!p)return;
+  if(b.dataset.pshare||b.dataset.pedit)prShare(p);
+  else if(b.dataset.pcopy)copy(p.caption);
+  else if(b.dataset.pdone){p.doneDates=p.doneDates||[];var i=p.doneDates.indexOf(today());if(i>=0)p.doneDates.splice(i,1);else p.doneDates.push(today());p.doneDates=p.doneDates.slice(-60);savePromo();renderPromo()}
+  else if(b.dataset.pdelp&&confirm('Ye post delete karna hai?')){promo=promo.filter(function(x){return x.id!==id});savePromo();imgDel(id);renderPromo()}
+});
+function promoRemind(quiet){
+  var LN=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications;
+  if(!LN){if(!quiet)toast('Reminder sirf installed app me chalega');return}
+  var tm=(settings.promoTime||'09:00').split(':'),h=Number(tm[0])||9,m=Number(tm[1])||0;
+  LN.cancel({notifications:[{id:7001}]}).catch(function(){}).then(function(){
+    if(!settings.promoRemind)return;
+    return LN.requestPermissions().then(function(r){if(r.display!=='granted'){if(!quiet)toast('Notification permission allow karo');return}
+      return LN.schedule({notifications:[{id:7001,title:'Shyla: aaj ka promotion post',body:'Aaj ka image post karna hai. App kholo.',schedule:{on:{hour:h,minute:m},allowWhileIdle:true}}]}).then(function(){if(!quiet)toast('Roz '+('0'+h).slice(-2)+':'+('0'+m).slice(-2)+' par reminder lagega')})})
+  }).catch(function(){if(!quiet)toast('Reminder nahi lag paya')});
+}
+$('prRem').addEventListener('change',function(){settings.promoRemind=this.checked;persist('cld-settings',settings);promoRemind(false)});
+$('prTime').addEventListener('change',function(){settings.promoTime=this.value;persist('cld-settings',settings);if(settings.promoRemind)promoRemind(false)});
+setTimeout(function(){if(settings.promoRemind)promoRemind(true)},5000);
 /* ---- Broadcast: ek message poori category ko ---- */
 var bcQ=[],bcI=0,bcRun=false;
 function openUrl(u){var a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
@@ -1431,7 +1569,7 @@ $('viewDay').addEventListener('click',function(e){
   setTimeout(function(){if(l.cat==='inbound'){enqDone(l.id,l.repliedAt?'fu':'reply')}else{var now=Date.now();update(l.id,{calls:(l.calls||[]).concat([{t:now,o:'plan'}]).slice(-15),lastCall:now,lastContact:today(),status:(!l.status||l.status==='New')?'Contacted':l.status,nextFollowUp:(l.nextFollowUp&&l.nextFollowUp>today())?l.nextFollowUp:addDays(2)})}},300);
 });
 /* backup */
-function bkData(){return JSON.stringify({app:'shyla',v:1,at:new Date().toISOString(),leads:leads,orders:orders,pos:pos,settings:settings})}
+function bkData(){return JSON.stringify({app:'shyla',v:1,at:new Date().toISOString(),leads:leads,orders:orders,pos:pos,promo:promo,settings:settings})}
 function bkInfo(){var t=localStorage.getItem('cld-lastbackup');$('bkInfo').textContent=t?'Aakhri backup: '+t.slice(0,10):'Abhi tak backup nahi liya.'}
 $('bkSave').addEventListener('click',function(){
   var name='shyla-backup-'+today()+'.json',txt=bkData(),C=window.Capacitor,P=C&&C.Plugins;
@@ -1446,6 +1584,7 @@ function restore(txt){
   if(!d||!Array.isArray(d.leads)){toast('Backup me leads nahi mile');return}
   var n=0,i=0,list=d.leads;
   if(Array.isArray(d.orders)){var ids={};orders.forEach(function(o){ids[o.id]=1});d.orders.forEach(function(o){if(o&&o.id&&!ids[o.id])orders.push(o)});saveOrders()}
+  if(Array.isArray(d.promo)){var qi={};promo.forEach(function(o){qi[o.id]=1});d.promo.forEach(function(o){if(o&&o.id&&!qi[o.id])promo.push(o)});savePromo()}
   if(Array.isArray(d.pos)){var pi={};pos.forEach(function(o){pi[o.id]=1});d.pos.forEach(function(o){if(o&&o.id&&!pi[o.id])pos.push(o)});savePos()}
   if(d.settings&&typeof d.settings==='object'){Object.keys(d.settings).forEach(function(k){if(d.settings[k]!==''&&d.settings[k]!=null)settings[k]=d.settings[k]});persist('cld-settings',settings)}
   (function step(){if(i>=list.length){toast(n+' leads wapas aaye');render();return}
