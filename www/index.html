@@ -368,6 +368,7 @@ Rate sirf validity tak mananiye.</textarea></label>
   <div class="tools lv">
     <div class="row-actions">
       <button class="btn primary" id="btnAdd" type="button">+ Nayi company</button>
+      <button class="btn" id="btnGs" type="button">&#128269; Google se business dhundho</button>
       <button class="btn" id="btnImport" type="button">CSV import</button>
       <button class="btn" id="btnExport" type="button">CSV copy</button>
       <button class="btn" id="btnCpcb" type="button">Lead Smelter list load (673)</button>
@@ -408,6 +409,18 @@ Rate sirf validity tak mananiye.</textarea></label>
     <datalist id="stateList"></datalist>
   </section>
 
+  <section class="panel lv" id="gsPanel" hidden>
+    <h2>Search business on Google</h2>
+    <p class="hint">Business ka naam ya type likho (jaise "lead battery recycler", "charcoal dealer"), city optional. Result me se jo chahiye ek tap me app me add karo.</p>
+    <label>Search business on Google<input id="gsQ" type="search" placeholder="e.g. lead recycling plant Ludhiana"></label>
+    <label>City / state (optional)<input id="gsCity" type="text" placeholder="e.g. Ludhiana, Punjab"></label>
+    <label>Kis category me add karna hai<select id="gsCat"></select></label>
+    <label>Google Places API key (ek baar, phone me hi save rehti hai)<input id="gsKey" type="password" placeholder="AIza..." autocomplete="off"></label>
+    <div class="row-actions"><button class="btn primary" id="gsGo" type="button">Search</button><button class="btn" id="gsMaps" type="button">Google Maps me kholo</button><button class="btn" id="gsAddAll" type="button" hidden>Sab add karo</button><button class="btn" id="gsClose" type="button">Band</button></div>
+    <p class="hint" id="gsInfo"></p>
+    <div id="gsRes" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="row-actions"><button class="btn" id="gsMore" type="button" hidden>Aur dikhao</button></div>
+  </section>
   <section class="panel lv" id="importPanel" hidden>
     <h2>CSV import</h2>
     <p class="hint" id="importHint">Har line me: company, state, city, capacity, person, phone, email. Pehli line header ho sakti hai. Capacity tonnes per year me likho.</p>
@@ -731,6 +744,51 @@ function openForm(l){
 }
 $('fCatIn').addEventListener('change',showMy);
 $('btnAdd').onclick=function(){openForm(null)};
+/* google business search (Places API New) */
+var gsRows=[],gsTok='',gsLast='';
+function gsCats(){$('gsCat').innerHTML=CATOPTS.map(function(o){return'<option value="'+o[0]+'">'+o[1]+'</option>'}).join('');var c=$('fCat').value;$('gsCat').value=c&&CATOPTS.some(function(o){return o[0]===c})?c:'recycler'}
+$('btnGs').onclick=function(){$('formPanel').hidden=true;$('importPanel').hidden=true;gsCats();$('gsKey').value=settings.gkey||'';$('gsPanel').hidden=false;$('gsPanel').scrollIntoView({behavior:'smooth',block:'start'});$('gsQ').focus()};
+$('gsClose').onclick=function(){$('gsPanel').hidden=true};
+$('gsKey').addEventListener('input',function(){settings.gkey=this.value.trim();persist('cld-settings',settings)});
+function gsQuery(){var q=$('gsQ').value.trim(),c=$('gsCity').value.trim();return q?(c?q+' in '+c:q):''}
+$('gsMaps').onclick=function(){var q=gsQuery();if(!q){toast('Pehle search likho');return}openUrl('https://www.google.com/maps/search/'+encodeURIComponent(q))};
+function gsComp(p,t){var c=(p.addressComponents||[]).find(function(x){return(x.types||[]).indexOf(t)>-1});return c?c.longText:''}
+function gsExists(r){var d=digits(r.phone).slice(-10);return leads.some(function(l){return(d.length===10&&digits(l.phone).slice(-10)===d)||(l.srvId&&l.srvId===r.sid)||(!d&&l.name&&l.name.toLowerCase()===r.name.toLowerCase()&&(l.city||'').toLowerCase()===r.city.toLowerCase())})}
+function gsDraw(){
+  $('gsRes').innerHTML=gsRows.map(function(r,i){var ex=gsExists(r);
+    return'<div class="panel" style="padding:10px"><b>'+esc(r.name)+'</b>'+(r.rating?' <span class="hint">&#9733; '+r.rating+' ('+(r.cnt||0)+')</span>':'')+'<div class="hint">'+esc(r.addr)+'</div>'+(r.phone?'<div>&#128222; '+esc(r.phone)+'</div>':'<div class="hint">Phone nahi mila</div>')+(r.web?'<div class="hint">'+esc(r.web)+'</div>':'')+'<div class="row-actions" style="margin-top:6px">'+(ex?'<span class="hint">Pehle se app me hai</span>':'<button class="btn primary" data-gsadd="'+i+'" type="button">App me add karo</button>')+(r.map?'<button class="btn" data-gsmap="'+i+'" type="button">Map</button>':'')+'</div></div>'}).join('');
+  $('gsAddAll').hidden=!gsRows.some(function(r){return!gsExists(r)});$('gsMore').hidden=!gsTok;
+}
+function gsSave(r){
+  return store.save({id:newId(),cat:$('gsCat').value,name:r.name,person:'',city:r.city,state:r.state,capacity:null,capNote:'',phone:r.phone?(/^\+/.test(r.phone)?r.phone:'+91 '+digits(r.phone).slice(-10)):'',email:'',notes:'Google search: '+gsLast+(r.web?'\nWeb: '+r.web:'')+(r.map?'\nMap: '+r.map:'')+(r.addr?'\nAddress: '+r.addr:''),status:'New',srvId:r.sid});
+}
+function gsFetch(more){
+  var key=(settings.gkey||'').trim();
+  if(!key){toast('Pehle Google Places API key daalo');$('gsKey').focus();return}
+  var q=more?gsLast:gsQuery();if(!q){toast('Pehle search likho');return}
+  gsLast=q;$('gsInfo').textContent='Dhundh raha hu...';
+  var body={textQuery:q,regionCode:'IN',languageCode:'en',pageSize:20};if(more&&gsTok)body.pageToken=gsTok;
+  fetch('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.googleMapsUri,places.rating,places.userRatingCount,places.addressComponents,nextPageToken'},body:JSON.stringify(body)})
+  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error((j.error&&j.error.message)||r.status);return j})})
+  .then(function(j){
+    var rows=(j.places||[]).map(function(p){return{sid:'g-'+p.id,name:(p.displayName&&p.displayName.text)||'',addr:p.formattedAddress||'',phone:p.nationalPhoneNumber||p.internationalPhoneNumber||'',web:p.websiteUri||'',map:p.googleMapsUri||'',rating:p.rating,cnt:p.userRatingCount,city:gsComp(p,'locality')||gsComp(p,'administrative_area_level_2'),state:gsComp(p,'administrative_area_level_1')}});
+    gsRows=more?gsRows.concat(rows):rows;gsTok=j.nextPageToken||'';
+    $('gsInfo').textContent=gsRows.length?gsRows.length+' business mile, '+gsRows.filter(function(r){return r.phone}).length+' me phone hai':'Kuch nahi mila. Search badal ke try karo.';gsDraw()})
+  .catch(function(e){$('gsInfo').textContent='Error: '+e.message+' (API key ya Places API (New) enable check karo)'});
+}
+$('gsGo').onclick=function(){gsTok='';gsFetch(false)};
+$('gsQ').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();gsTok='';gsFetch(false)}});
+$('gsMore').onclick=function(){gsFetch(true)};
+$('gsRes').addEventListener('click',function(e){
+  var a=e.target.getAttribute('data-gsadd'),m=e.target.getAttribute('data-gsmap');
+  if(m!=null){openUrl(gsRows[m].map);return}
+  if(a!=null){var r=gsRows[a];gsSave(r).then(function(){toast('Add ho gaya: '+r.name);gsDraw()},function(){toast('Save nahi hua')})}
+});
+$('gsAddAll').onclick=function(){
+  var todo=gsRows.filter(function(r){return!gsExists(r)});if(!todo.length)return;
+  Promise.all(todo.map(gsSave)).then(function(){toast(todo.length+' business add hue');gsDraw()},function(){toast('Kuch save nahi hue')});
+};
+
 $('btnCancel').onclick=function(){$('formPanel').hidden=true};
 $('leadForm').onsubmit=function(e){
   e.preventDefault();
