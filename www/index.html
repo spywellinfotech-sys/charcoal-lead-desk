@@ -380,6 +380,7 @@ Rate sirf validity tak mananiye.</textarea></label>
       <button class="btn" id="btnTrans" type="button">Transporter list load (37)</button>
       <button class="btn" id="btnCarbide" type="button">Carbide list load (8)</button>
       <button class="btn" id="btnDealer" type="button">Dealer list load (293)</button>
+      <div id="fCount" style="flex:1 0 100%;display:flex;align-items:baseline;gap:10px;margin-top:4px"><span id="fCountN" style="font-size:44px;line-height:1;font-weight:800;color:var(--blue,#1560bd)">0</span><span id="fCountL" style="font-size:15px;font-weight:600;color:var(--muted,#555)">companies</span></div>
     </div>
     <span class="hint" id="storeNote"></span>
   </div>
@@ -705,7 +706,7 @@ function renderCats(){
 }
 function render(){renderCats();
   stateOptions();renderStats();renderCall();renderEnq();renderDay();renderOrd();renderPo();renderBc();renderPromo();
-  var r=filtered(),totalShown=r.length;r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
+  var r=filtered(),totalShown=r.length;$('fCountN').textContent=totalShown.toLocaleString('en-IN');$('fCountL').textContent=(isNet()?'contacts':'companies')+' (filter ke baad)';r=r.slice(0,shown);var max=leads.reduce(function(a,l){return Math.max(a,Number(l.capacity)||0)},0)||1;
   if(!leads.length){$('list').innerHTML='<div class="empty">Abhi koi company nahi hai. "Nayi company" se ek jodo ya CSV import karo.</div>';return}
   if(!r.length){$('list').innerHTML='<div class="empty">Is filter me koi company nahi mili.</div>';return}
   $('list').innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+r.map(function(l){
