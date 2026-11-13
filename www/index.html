@@ -210,6 +210,7 @@ details.panel>summary{font:700 18px/1.2 var(--f-display);letter-spacing:0;text-t
     <div class="panel"><h2>Auto-sync (auto-reply server)</h2><p class="hint">Google Apps Script setup ke baad uska URL yahan daalo. Naye enquiry app kholte hi aa jayenge, aur jin par server ne reply bhej diya wo "Contact hue" me dikhenge.</p><label>Sync URL (key ke saath)<input id="enqUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec?key=..."></label><div class="row-actions"><button class="btn" id="enqSync" type="button">Abhi sync karo</button></div><h2 style="margin-top:14px">Auto backup &rarr; Google Drive</h2><p class="hint">Isi URL se roz apne aap poora data (leads, orders, settings) aapke Drive ke "Shyla Backups" folder me save hoga. Last 14 din ke backup rehte hain.</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="bkAuto" style="width:auto"> Roz automatic backup chalu</label><div id="bkDrvInfo" class="hint"></div><div class="row-actions"><button class="btn" id="bkDrive" type="button">Abhi Drive backup</button><button class="btn" id="bkDrvRes" type="button">Drive se restore</button></div></div>
     <div id="enqStats" class="stats"></div>
     <div id="enqNext"></div>
+    <div class="panel" style="padding:10px"><input id="enqQ" type="search" placeholder="Enquiry search: naam, company, phone, city, state, product" autocomplete="off"><div class="row-actions" style="margin-top:8px"><select id="enqFs" aria-label="Source"><option value="">Sab source</option><option value="TradeIndia">TradeIndia</option><option value="IndiaMART">IndiaMART</option><option value="Other">Baaki</option></select><select id="enqFr" aria-label="Reply"><option value="">Sab</option><option value="new">Reply baaki</option><option value="done">Reply ho gaya</option><option value="won">Order mila</option></select></div><div id="enqFc" style="font-size:22px;font-weight:800;margin-top:6px"></div></div>
     <div id="enqList" style="display:flex;flex-direction:column;gap:10px"></div>
   </section>
 
@@ -1236,7 +1237,15 @@ function renderEnq(){
      '<button class="btn" type="button" data-eskip="'+esc(n.id)+'">Baad me</button></div></div>';
   }else $('enqNext').innerHTML=all.length?'<div class="empty">Sab enquiry ka reply ho chuka hai. Naya enquiry aate hi yahan paste karo.</div>':'<div class="empty">Abhi koi enquiry nahi. TradeIndia/IndiaMART ka lead text upar paste karo.</div>';
   var rows=all.slice().sort(function(a,b){var ua=(!a.repliedAt)?1:0,ub=(!b.repliedAt)?1:0;return ub-ua||(b.enqAt||0)-(a.enqAt||0)});
-  $('enqList').innerHTML=rows.slice(0,60).map(function(l){
+  var q=($('enqQ').value||'').toLowerCase().trim(),fs=$('enqFs').value,fr=$('enqFr').value,qd=q.replace(/\D/g,'');
+  rows=rows.filter(function(l){
+    if(fs&&(fs==='Other'?/tradeindia|indiamart/i.test(l.src||''):(l.src||'')!==fs))return false;
+    if(fr==='new'&&l.repliedAt)return false;if(fr==='done'&&!l.repliedAt)return false;if(fr==='won'&&l.status!=='Won')return false;
+    if(!q)return true;
+    var hay=[l.name,l.person,l.city,l.state,l.enqReq,l.email,l.notes,l.src].join(' ').toLowerCase();
+    return hay.indexOf(q)>-1||(qd.length>=3&&digits(l.phone).indexOf(qd)>-1)});
+  $('enqFc').textContent=rows.length+(q||fs||fr?' enquiry mili':' enquiry');
+  $('enqList').innerHTML=rows.slice(0,100).map(function(l){
     var k=enqLinks(l),st=ST[l.status||'New']||ST.New,late=!l.repliedAt&&(Date.now()-(l.enqAt||0))>30*60000,isF=!!l.repliedAt,dueF=isF&&l.nextFollowUp&&l.nextFollowUp<=t;
     return'<article class="lead" style="--st:var('+st.c+')"><div class="lead-head"><div><div class="name">'+esc(l.name)+'</div><div class="meta">'+esc([l.person,l.city,l.state].filter(Boolean).join(' · '))+'</div></div><span class="pill" style="--pill-bg:var('+st.bg+');--pill-fg:var('+st.fg+')">'+st.l+'</span></div>'+
      '<div class="eage'+(late?' late':'')+'">'+(l.repliedAt?'Reply: '+ago(l.repliedAt):'Aaya: '+ago(l.enqAt)+(late?' · jaldi reply karo':''))+(l.nextFollowUp&&isF&&isOpen(l)?' · follow-up '+esc(l.nextFollowUp)+(dueF?' (due)':''):'')+'</div>'+
@@ -1255,6 +1264,7 @@ function syncEnq(quiet){
   }).catch(function(){if(!quiet)toast('Sync nahi hua. URL check karo')});
 }
 $('enqUrl').value=settings.enqUrl||'';
+['enqQ','enqFs','enqFr'].forEach(function(i){$(i).addEventListener(i==='enqQ'?'input':'change',function(){renderEnq()})});
 $('enqUrl').addEventListener('input',function(){settings.enqUrl=this.value;persist('cld-settings',settings)});
 $('enqSync').addEventListener('click',function(){syncEnq(false)});
 setTimeout(function(){syncEnq(true)},4000);
